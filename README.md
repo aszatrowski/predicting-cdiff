@@ -9,11 +9,21 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 ## Task list
 - [x] Define longitudinal structure
 - [x] Load antibiotic administration data
+    - [x] antibiotic classes
 - [x] Load C. diff ELISA tests
 - [x] Load C. diff ICD codes 
-- [ ] Load admissions data + patient demographics
-    - [ ] Join to antibiotic data 
+- [x] Load admissions data + patient demographics
+- [x] Compute age & time since admit
+- [ ] Compute ICU context: is `icu_admit_time < antibiotic_time < icu_discharge_time == TRUE`?
 - [ ] Load comorbidities data
+    - [ ] filter to prior to admin
+- [ ] Load blood counts data
+    - [ ] filter to prior to admin
+- [ ] Load liver fxn data
+    - [ ] filter to prior to admin
+- [ ] Load renal fxn data
+    - [ ] filter to prior to admin
+- [ ] Figure out how to handle dosage
 
 ## Labels
 Admission is labeled as CDI if:
