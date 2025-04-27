@@ -14,7 +14,6 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [ ] Load admissions data + patient demographics
     - [ ] Join to antibiotic data 
 - [ ] Load comorbidities data
-- [ ] Load microbiology data
 
 ## Labels
 Admission is labeled as CDI if:
@@ -39,6 +38,7 @@ Admission is labeled as CDI if:
         * Sex 
     * Prior C. diff 
     * Days elapsed since admission
+        * **Very important note:** Ab admin times only have day resolution, whereas admit times have minute resolution. If Abs were administered on admission day, the time comes out negative (e.g. 00:00 - 13:41). For now, I have rounded them up to zero.
     * TYPE of antibiotic
         * Classify each antibiotic instance into its class
         * Then pivot_wider to get a binary column for each class 

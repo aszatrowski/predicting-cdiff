@@ -1,0 +1,14 @@
+# Visualizations
+```{r}
+library(tidyverse)
+library(ggsci)
+training_data <- read_csv("training_data.csv")
+```
+
+```{r}
+ggplot(training_data, aes(
+    x = pmax(as.numeric(admin_time_since_admission), 1))) +
+    geom_density(aes(fill = cdiff_30d_flag), alpha = 0.6) +
+    scale_x_log10() +
+    scale_fill_aaas()
+```
