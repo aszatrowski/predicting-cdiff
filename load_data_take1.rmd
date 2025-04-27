@@ -34,6 +34,8 @@ antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
         dose_val_rx,
         dose_unit_rx)
 ```
+
+## Load *C. diff* diagnosis info
 ```{r}
 cdiff_tests <- read_csv("mimic-demo/MICROBIOLOGYEVENTS.csv") |>
     filter(org_itemid == 80139) |> # code for C. difficile
@@ -48,16 +50,56 @@ cdiff_tests <- read_csv("mimic-demo/MICROBIOLOGYEVENTS.csv") |>
     )
 cdiff_icd9 <- read_csv("mimic-demo/DIAGNOSES_ICD.csv") |>
     filter(icd9_code == "00845") |> # code for C. difficile
+    rename(cdiff_icd9 = icd9_code) |>
     select(
         subject_id,
         hadm_id,
         seq_num,
-        icd9_code
+        cdiff_icd9
+    )
+
+diarrhea_icd9 <- read_csv("mimic-demo/DIAGNOSES_ICD.csv") |>
+    filter(icd9_code == "78791") |> # code for C. difficile
+    rename(diarrhea_icd9 = icd9_code) |>
+    select(
+        subject_id,
+        hadm_id,
+        seq_num,
+        diarrhea_icd9
     )
 
 head(cdiff_tests)
 head(cdiff_icd9)
+head(diarrhea_icd9)
 ```
+
+```{r}
+admissions <- read_csv("mimic-demo/ADMISSIONS.csv")
+patients <- read_csv("mimic-demo/PATIENTS.csv")
+
+demographics <- admissions |>
+    left_join(patients, by = c("subject_id")) |>
+    mutate(
+        is_female = ifelse(
+            gender == "F",
+            yes = TRUE,
+            no = FALSE
+        )
+    ) |>
+    select(
+        subject_id,
+        hadm_id,
+        is_female,
+        dob,
+        admittime,
+        dischtime,
+        admission_type,
+        insurance,
+        diagnosis,
+    )
+```
+
+## Join everything together and compute new columns
 ```{r}
 training_data <- antibiotics |>
     left_join(
@@ -68,13 +110,25 @@ training_data <- antibiotics |>
         cdiff_icd9,
         by = c("subject_id", "hadm_id")
     ) |>
+    left_join(
+        diarrhea_icd9,
+        by = c("subject_id", "hadm_id"),
+    ) |>
+    left_join(
+        demographics,
+        by = c("subject_id", "hadm_id"),
+    ) |>
     mutate(
+        # generate age column
+        age_at_admin = ab_startdate - dob,
+        # generate variable for time since admission at Ab admin
+        admin_time_since_admission = pmax(ab_startdate - admittime, 0),
         cdiff_30d_flag = ifelse(
-            cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_enddate + ddays(30) | icd9_code == "00845",
+            cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_enddate + ddays(30) | cdiff_icd9 == "00845",
             yes = TRUE,
             no = FALSE
         ),
-        cdiff_30d_flag = ifelse(is.na(cdiff_30d_flag), yes = FALSE, no = cdiff_30d_flag)
+        cdiff_30d_flag = ifelse(is.na(cdiff_30d_flag), yes = FALSE, no = cdiff_30d_flag),
     )
 View(training_data)
 ```
