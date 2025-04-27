@@ -8,18 +8,21 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 
 ## Task list
 - [x] Define longitudinal structure
+- [x] Load antibiotic administration data
+- [x] Load C. diff ELISA tests
+- [x] Load C. diff ICD codes 
+- [ ] Load admissions data + patient demographics
+    - [ ] Join to antibiotic data 
+- [ ] Load comorbidities data
 - [ ] Load microbiology data
-- [ ] Load C. diff ELISA tests
-- [ ] Load C. diff ICD codes 
 
 ## Labels
 Admission is labeled as CDI if:
 * ELISA Positive OR
 * ICD9: `008.45` OR
-* All of:
-    * Diarrhea NOS (`R19.7`)
-    * Abdominal pain `789.00` OR `789.09`
-    * Fever `780.60`
+* Both:
+    * PCR Positive 
+    * Diarrhea NOS (`787.91`)
 
 
 ##  Longitudinal Data Structure

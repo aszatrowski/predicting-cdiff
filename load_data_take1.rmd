@@ -1,0 +1,83 @@
+# Data loading and cleaning
+```{r}
+library(tidyverse)
+antibiotics_list <- read_csv("hospital-antibiotics.csv")
+```
+
+## Generate sample of unique antibiotic administrations
+```{r}
+antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
+    filter(drug %in% antibiotics_list$Antibiotic) |>
+    mutate(
+        drug = as.factor(drug),
+        in_icu = ifelse(is.na(icustay_id), yes = FALSE, no = TRUE),
+        antibiotic_key = paste(subject_id, hadm_id, icustay_id, row_id, drug, sep = "_")
+    ) |>
+    rename(
+        ab_startdate = startdate,
+        ab_enddate = enddate,
+    ) |>
+    left_join(
+        antibiotics_list,
+        by = c("drug" = "Antibiotic")
+    ) |>
+    select(
+        row_id,
+        subject_id,
+        hadm_id,
+        icustay_id,
+        antibiotic_key,
+        drug,
+        drug_class,
+        ab_startdate,
+        ab_enddate,
+        dose_val_rx,
+        dose_unit_rx)
+```
+```{r}
+cdiff_tests <- read_csv("mimic-demo/MICROBIOLOGYEVENTS.csv") |>
+    filter(org_itemid == 80139) |> # code for C. difficile
+    rename(
+        cdiff_charttime = charttime,
+    ) |>
+    select(
+        subject_id,
+        hadm_id,
+        cdiff_charttime,
+        org_itemid
+    )
+cdiff_icd9 <- read_csv("mimic-demo/DIAGNOSES_ICD.csv") |>
+    filter(icd9_code == "00845") |> # code for C. difficile
+    select(
+        subject_id,
+        hadm_id,
+        seq_num,
+        icd9_code
+    )
+
+head(cdiff_tests)
+head(cdiff_icd9)
+```
+```{r}
+training_data <- antibiotics |>
+    left_join(
+        cdiff_tests,
+        by = c("subject_id", "hadm_id")
+    ) |>
+    left_join(
+        cdiff_icd9,
+        by = c("subject_id", "hadm_id")
+    ) |>
+    mutate(
+        cdiff_30d_flag = ifelse(
+            cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_enddate + ddays(30) | icd9_code == "00845",
+            yes = TRUE,
+            no = FALSE
+        ),
+        cdiff_30d_flag = ifelse(is.na(cdiff_30d_flag), yes = FALSE, no = cdiff_30d_flag)
+    )
+View(training_data)
+```
+```{r}
+write_csv(training_data, "training_data.csv")
+```
