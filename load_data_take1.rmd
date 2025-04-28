@@ -98,6 +98,19 @@ demographics <- admissions |>
         diagnosis,
     )
 ```
+```{r}
+icustays <- read_csv("mimic-demo/ICUSTAYS.csv") |>
+    rename(icu_intime = intime, icu_outtime = outtime) |>
+    select(
+        subject_id,
+        hadm_id,
+        icustay_id,
+        first_careunit,
+        last_careunit,
+        icu_intime,
+        icu_outtime
+    )
+```
 
 ## Join everything together and compute new columns
 ```{r}
@@ -118,17 +131,32 @@ training_data <- antibiotics |>
         demographics,
         by = c("subject_id", "hadm_id"),
     ) |>
+    left_join(
+        icustays,
+        by = c("subject_id", "hadm_id", "icustay_id"),
+    ) |>
     mutate(
         # generate age column
         age_at_admin = ab_startdate - dob,
-        # generate variable for time since admission at Ab admin
+        # generate variable for time since admission at Ab admin, mark 0 if same day since datetimes for Abs are not available
         admin_time_since_admission = pmax(ab_startdate - admittime, 0),
+        in_icu = ifelse(
+            ab_startdate >= icu_intime & ab_startdate <= icu_outtime,
+            TRUE,
+            FALSE
+        ),
+        # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
-            cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_enddate + ddays(30) | cdiff_icd9 == "00845",
+            # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
+            (cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_startdate + ddays(30))
+            # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
+            | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + ddays(30)),
+            # Assign TRUE/FALSE accordingly
             yes = TRUE,
             no = FALSE
         ),
-        cdiff_30d_flag = ifelse(is.na(cdiff_30d_flag), yes = FALSE, no = cdiff_30d_flag),
+        # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
+        cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
     )
 View(training_data)
 ```
