@@ -53,7 +53,6 @@ cdiff_icd9 <- read_csv("mimic-demo/DIAGNOSES_ICD.csv") |>
     select(
         subject_id,
         hadm_id,
-        seq_num,
         cdiff_icd9
     )
 
@@ -63,13 +62,8 @@ diarrhea_icd9 <- read_csv("mimic-demo/DIAGNOSES_ICD.csv") |>
     select(
         subject_id,
         hadm_id,
-        seq_num,
         diarrhea_icd9
     )
-
-head(cdiff_tests)
-head(cdiff_icd9)
-head(diarrhea_icd9)
 ```
 
 ## Load patient demographics
@@ -116,7 +110,7 @@ icustays <- read_csv("mimic-demo/ICUSTAYS.csv") |>
 
 ## Load lab values
 ```{r}
-labvalues <- read_csv("mimic-demo/LABEVENTS.csv", col_types = list(value = col_double()))
+labvalues <- read_csv("mimic-demo/LABEVENTS.csv")
 ```
 ### Liver
 ```{r}
@@ -170,7 +164,7 @@ liver_labs <- labvalues |>
         values_fn = ~ mean(.x, na.rm = TRUE),
         names_prefix = "mean_prior_")
 
-View(liver_labs)
+# View(liver_labs)
 # write_csv(liver_labs, "liver_labs.csv")
 ```
 ### Renal
