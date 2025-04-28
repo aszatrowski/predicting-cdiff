@@ -1,11 +1,10 @@
-# Data loading and cleaning
-```{r}
+execution_start <- now()
 library(tidyverse)
+library(glue)
 antibiotics_list <- read_csv("hospital-antibiotics.csv")
-```
 
 ## Generate sample of unique antibiotic administrations
-```{r}
+
 antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
     filter(drug %in% antibiotics_list$Antibiotic) |>
     mutate(
@@ -32,10 +31,10 @@ antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
         ab_enddate,
         dose_val_rx,
         dose_unit_rx)
-```
+
 
 ## Load *C. diff* diagnosis info
-```{r}
+
 cdiff_tests <- read_csv("mimic-demo/MICROBIOLOGYEVENTS.csv") |>
     filter(org_itemid == 80139) |> # code for C. difficile
     rename(
@@ -70,10 +69,10 @@ diarrhea_icd9 <- read_csv("mimic-demo/DIAGNOSES_ICD.csv") |>
 head(cdiff_tests)
 head(cdiff_icd9)
 head(diarrhea_icd9)
-```
+
 
 ## Load patient demographics
-```{r}
+
 admissions <- read_csv("mimic-demo/ADMISSIONS.csv")
 patients <- read_csv("mimic-demo/PATIENTS.csv")
 
@@ -97,10 +96,10 @@ demographics <- admissions |>
         insurance,
         diagnosis,
     )
-```
+
 
 ## Load ICU status
-```{r}
+
 icustays <- read_csv("mimic-demo/ICUSTAYS.csv") |>
     rename(icu_intime = intime, icu_outtime = outtime) |>
     select(
@@ -112,14 +111,14 @@ icustays <- read_csv("mimic-demo/ICUSTAYS.csv") |>
         icu_intime,
         icu_outtime
     )
-```
+
 
 ## Load lab values
-```{r}
-labvalues <- read_csv("mimic-demo/LABEVENTS.csv", col_types = list(value = col_double()))
-```
+
+labvalues <- read_csv("mimic-demo/LABEVENTS.csv")
+
 ### Liver
-```{r}
+
 # item_id dictionary
 liver_lab_itemids <- list(
     bilirubin_total = 50885,
@@ -170,14 +169,11 @@ liver_labs <- labvalues |>
         values_fn = ~ mean(.x, na.rm = TRUE),
         names_prefix = "mean_prior_")
 
-View(liver_labs)
-# write_csv(liver_labs, "liver_labs.csv")
-```
-### Renal
-### Blood counts
 
-## Join everything together and compute new columns
-```{r}
+# Renal
+# Blood counts
+
+# Join everything together and compute new columns
 training_data <- antibiotics |>
     select(-row_id) |>
     left_join(
@@ -228,8 +224,9 @@ training_data <- antibiotics |>
         cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
     )  |>
     select(-icu_intime, -icu_outtime)
-View(training_data)
-```
-```{r}
-write_csv(training_data, "training_data.csv")
-```
+
+process_stop <- now()
+write_csv(training_data, "training_data.csv", progress = TRUE)
+write_stop <- now()
+print(paste("Processing time:", format(process_stop - execution_start, digits = 4)))
+print(paste("Write time:", format(write_stop - process_stop, digits = 4)))
