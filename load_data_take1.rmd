@@ -73,6 +73,7 @@ head(cdiff_icd9)
 head(diarrhea_icd9)
 ```
 
+## Load patient demographics
 ```{r}
 admissions <- read_csv("mimic-demo/ADMISSIONS.csv")
 patients <- read_csv("mimic-demo/PATIENTS.csv")
@@ -98,6 +99,8 @@ demographics <- admissions |>
         diagnosis,
     )
 ```
+
+## Load ICU status
 ```{r}
 icustays <- read_csv("mimic-demo/ICUSTAYS.csv") |>
     rename(icu_intime = intime, icu_outtime = outtime) |>
@@ -112,9 +115,70 @@ icustays <- read_csv("mimic-demo/ICUSTAYS.csv") |>
     )
 ```
 
+## Load lab values
+```{r}
+labvalues <- read_csv("mimic-demo/LABEVENTS.csv", col_types = list(value = col_double()))
+```
+### Liver
+```{r}
+# item_id dictionary
+liver_lab_itemids <- list(
+    bilirubin_total = 50885,
+    alkaline_phosphatase = 50863,
+    alanine_transaminase = 50861,
+    aspartate_aminotransferase = 50878,
+    gamma_glutamyltransferase = 50927
+)
+# Set QC thresholds for lab values
+lab_qc_thresholds <- c(
+    "bilirubin_total" = 20,
+    "alkaline_phosphatase" = 600,
+    "alanine_transaminase" = 100,
+    "aspartate_aminotransferase" = 100,
+    "Gamma_glutamyltransferase" = 170
+)
+
+liver_labs <- labvalues |>
+    filter(itemid %in% liver_lab_itemids) |>
+    # Map itemid to iterpretable name using dictionary
+    mutate(
+        test_name = as.factor(case_when(
+            itemid == liver_lab_itemids$bilirubin_total ~ names(liver_lab_itemids)[1],
+            itemid == liver_lab_itemids$alkaline_phosphatase ~ names(liver_lab_itemids)[2],
+            itemid == liver_lab_itemids$alanine_transaminase ~ names(liver_lab_itemids)[3],
+            itemid == liver_lab_itemids$aspartate_aminotransferase ~ names(liver_lab_itemids)[4],
+            itemid == liver_lab_itemids$gamma_glutamyltransferase ~ names(liver_lab_itemids)[5]
+        ))
+    ) |>
+    # filter to lab-specific QC thresholds
+    filter(valuenum < lab_qc_thresholds[test_name]) |>
+    right_join(
+        antibiotics,
+        by = c("subject_id", "hadm_id"),
+        relationship = "many-to-many" # each Ab will be associated with multiple labs, and each lab will be associated with multiple Abs, since eac admission (the key), may contain multiple Abs
+    ) |>
+    rename(lab_charttime = charttime) |>
+    filter(lab_charttime < ab_startdate) |>
+    pivot_wider(
+        id_cols = c(
+            subject_id,
+            hadm_id,
+            antibiotic_key),
+        names_from = test_name,
+        values_from = c(valuenum),
+        values_fn = ~ mean(.x, na.rm = TRUE),
+        names_prefix = "mean_prior_")
+
+View(liver_labs)
+write_csv(liver_labs, "liver_labs.csv")
+```
+### Renal
+### Blood counts
+
 ## Join everything together and compute new columns
 ```{r}
 training_data <- antibiotics |>
+    select(-row_id) |>
     left_join(
         cdiff_tests,
         by = c("subject_id", "hadm_id")
@@ -134,6 +198,10 @@ training_data <- antibiotics |>
     left_join(
         icustays,
         by = c("subject_id", "hadm_id", "icustay_id"),
+    ) |>
+    left_join(
+        liver_labs,
+        by = c("subject_id", "hadm_id", "antibiotic_key"),
     ) |>
     mutate(
         # generate age column
@@ -157,7 +225,8 @@ training_data <- antibiotics |>
         ),
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
         cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
-    )
+    )  |>
+    select(-icu_intime, -icu_outtime)
 View(training_data)
 ```
 ```{r}
