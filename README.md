@@ -29,6 +29,7 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 Admission is labeled as CDI if:
 * ELISA Positive OR
 * ICD9: `008.45` OR
+    * It is possible that ICDs don't actually have datetimes attached and are only finalized at the end of admission. For this reason I think we can require that `008.45` was marked at the end of an admission that ended <30 days from admin point.
 * Both:
     * PCR Positive 
     * Diarrhea NOS (`787.91`)
