@@ -3,6 +3,8 @@
 library(tidyverse)
 library(ggsci)
 training_data <- read_csv("training_data.csv")
+liver_labs <- read_csv("liver_labs.csv") |>
+    filter(valuenum < 500)
 ```
 
 ```{r}
@@ -10,5 +12,10 @@ ggplot(training_data, aes(
     x = pmax(as.numeric(admin_time_since_admission), 1))) +
     geom_density(aes(fill = cdiff_30d_flag), alpha = 0.6) +
     scale_x_log10() +
+    scale_fill_aaas()
+```
+```{r}
+ggplot(liver_labs, aes(x = valuenum)) +
+    geom_density(aes(fill = test_name), alpha = 0.6) +
     scale_fill_aaas()
 ```

@@ -14,14 +14,21 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [x] Load C. diff ICD codes 
 - [x] Load admissions data + patient demographics
 - [x] Compute age & time since admit
-- [ ] Compute ICU context: is `icu_admit_time < antibiotic_time < icu_discharge_time == TRUE`?
-- [ ] Load comorbidities data
-    - [ ] filter to prior to admin
+- [x] Compute ICU context: is `icu_admit_time < antibiotic_time < icu_discharge_time == TRUE`?
+- [ ] Load liver fxn data
+    - bilirubin direct (`item_id` 50838, LOINC ?)
+    - alkaline phosphatase direct (ALP, `item_id` 50863, LOINC `6768-6`)
+    - alanine transaminase direct (ALT, `item_id` 50861, LOINC `1742-6`)
+    - aspartate aminotransferase (AST, `item_id` 50878, LOINC `1920-8`)
+    - Gamma-glutamyltransferase (GLT, `item_id` 50927, LOINC `2324-2`)
+    - [x] filter to prior to admin
+    - [x] `pivot_wider()` such that each test as its own column, and Ab-prior tests are averaged
+        - could even include max? min?
 - [ ] Load blood counts data
     - [ ] filter to prior to admin
-- [ ] Load liver fxn data
-    - [ ] filter to prior to admin
 - [ ] Load renal fxn data
+    - [ ] filter to prior to admin
+- [ ] Load comorbidities data
     - [ ] filter to prior to admin
 - [ ] Figure out how to handle dosage
 
