@@ -31,6 +31,21 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [ ] Load comorbidities data
     - [ ] filter to prior to admin
 - [ ] Figure out how to handle dosage
+- [ ] Large data handling with `BigQuery`
+    - best idea so far: rewrite (Claude) data wrangling pipeline to SQL, then pass that in Google Cloud for each source CSV and then export those results, merge, train/test etc.
+    - If BBJ can get us Midway access, that would also be good, since we can just `wget` the whole dataset there and train using their compute
+- [ ] Simple logistic regression for `cdiff_flag ~ admin_time_since_admit`
+    - because Austin is curious
+- [ ] Select final feature set 
+- [ ] Create train/validation/test subsets
+    - `sklearn.train_test_split()`
+    - k-fold cross validation probably a good idea
+    - MIMIC IV as test set? would be a nice forward comparison
+- [ ] Implement logistic regression
+    - Check OR
+- [ ] Implement XGBoost
+- [ ] Figure out model evaluation 
+- [ ] Final report in $\LaTeX$ (non-negotiable)
 
 ## Labels
 Admission is labeled as CDI if:
