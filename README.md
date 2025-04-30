@@ -34,6 +34,7 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [ ] Large data handling with `BigQuery`
     - best idea so far: rewrite (Claude) data wrangling pipeline to SQL, then pass that in Google Cloud for each source CSV and then export those results, merge, train/test etc.
     - If BBJ can get us Midway access, that would also be good, since we can just `wget` the whole dataset there and train using their compute
+        - update: Midway access likely. Store the data up there, have all the groups share a copy, and then we can use Midway compute for model training and we won't have to worry about fitting the whole training dataset in RAM 
 - [ ] Simple logistic regression for `cdiff_flag ~ admin_time_since_admit`
     - because Austin is curious
 - [ ] Select final feature set 
@@ -44,7 +45,10 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [ ] Implement logistic regression
     - Check OR
 - [ ] Implement XGBoost
-- [ ] Figure out model evaluation 
+- [ ] Figure out model evaluation; will be AUPRC given low case prevalence
+- [ ] Unsupervised clustering of cases for identifying cryptic C-diff?
+    - Is case similarity sufficiently specific, or would this be dastardly falsely positive?
+    - any way to follow up and validate?
 - [ ] Final report in $\LaTeX$ (non-negotiable)
 
 ## Labels
