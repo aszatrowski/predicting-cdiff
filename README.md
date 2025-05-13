@@ -15,7 +15,7 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [x] Load admissions data + patient demographics
 - [x] Compute age & time since admit
 - [x] Compute ICU context: is `icu_admit_time < antibiotic_time < icu_discharge_time == TRUE`?
-- [ ] Load liver fxn data
+- [x] Load liver fxn data
     - bilirubin direct (`item_id` 50838, LOINC ?)
     - alkaline phosphatase direct (ALP, `item_id` 50863, LOINC `6768-6`)
     - alanine transaminase direct (ALT, `item_id` 50861, LOINC `1742-6`)
@@ -28,10 +28,10 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - [ ] filter to prior to admin
 - [ ] Load renal fxn data
     - [ ] filter to prior to admin
-- [ ] Load comorbidities data
-    - [ ] filter to prior to admin
+- [ ] Load comorbidities data (ICD codes)
+    - [ ] filter to prior admissions; ICDs don't have attached datetimes anyway
 - [ ] Figure out how to handle dosage
-- [ ] Large data handling with `BigQuery`
+- [ ] Large data handling with `BigQuery` - should no longer be necessary now that Midway is up and running
     - best idea so far: rewrite (Claude) data wrangling pipeline to SQL, then pass that in Google Cloud for each source CSV and then export those results, merge, train/test etc.
     - If BBJ can get us Midway access, that would also be good, since we can just `wget` the whole dataset there and train using their compute
         - update: Midway access likely. Store the data up there, have all the groups share a copy, and then we can use Midway compute for model training and we won't have to worry about fitting the whole training dataset in RAM 
@@ -46,6 +46,7 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - Check OR
 - [ ] Implement XGBoost
 - [ ] Figure out model evaluation; will be AUPRC given low case prevalence
+- [ ] Secondary endpoint: severe C. diff
 - [ ] Unsupervised clustering of cases for identifying cryptic C-diff?
     - Is case similarity sufficiently specific, or would this be dastardly falsely positive?
     - any way to follow up and validate?
@@ -82,7 +83,7 @@ Admission is labeled as CDI if:
     * DOSE of antibiotic (?)
     * Care setting: when antibiotic was given, was pateint in ICU?
         * Simply check whether `icu_admit_time < antibiotic_time < icu_discharge_time`
-    * Comorbidities
+    * Comorbidities - FROM PRIOR VISITS
         * Diabetes
         * Hypertension
         * Chronic kidney disease
