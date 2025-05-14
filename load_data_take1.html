@@ -11,7 +11,7 @@
 
 
 
-<title>load_data_take1.knit</title>
+<title>Predicting C. diff Data Pipeline Draft</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -348,6 +348,7 @@ display: none;
 
 
 
+<h1 class="title toc-ignore">Predicting C. diff Data Pipeline Draft</h1>
 
 </div>
 
@@ -356,7 +357,6 @@ display: none;
 <h1>Data loading and cleaning</h1>
 <div id="major-settings" class="section level2">
 <h2>Major settings:</h2>
-<pre class="r"><code>time_delta &lt;- 30 # days</code></pre>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
@@ -368,6 +368,7 @@ display: none;
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
 ## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<pre class="r"><code>time_delta &lt;- ddays(30) # days</code></pre>
 <pre class="r"><code>antibiotics_list &lt;- read_csv(&quot;hospital-antibiotics.csv&quot;)</code></pre>
 <pre><code>## Rows: 47 Columns: 2
 ## ── Column specification ────────────────────────────────────────────────────────
@@ -793,9 +794,9 @@ blood_labs &lt;- labvalues |&gt;
         # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
-            (cdiff_charttime &gt;= ab_startdate &amp; cdiff_charttime &lt;= ab_startdate + ddays(time_delta))
+            (cdiff_charttime &gt;= ab_startdate &amp; cdiff_charttime &lt;= ab_startdate + time_delta)
             # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was &lt;30 days after Ab start
-            | (cdiff_icd9 == &quot;00845&quot; &amp; dischtime &lt;= ab_startdate + ddays(time_delta)),
+            | (cdiff_icd9 == &quot;00845&quot; &amp; dischtime &lt;= ab_startdate + time_delta),
             # Assign TRUE/FALSE accordingly
             yes = TRUE,
             no = FALSE
