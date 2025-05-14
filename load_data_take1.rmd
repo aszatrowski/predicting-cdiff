@@ -20,22 +20,12 @@ antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
         antibiotics_list,
         by = c("drug" = "Antibiotic")
     ) |>
-    # select(
-    #     # row_id,
-    #     subject_id,
-    #     hadm_id,
-    #     icustay_id,
-    #     antibiotic_key,
-    #     drug,
-    #     drug_class,
-    #     ab_startdate,
-    #     ab_enddate,
-    #     dose_val_rx,
-    #     dose_unit_rx) |>
     pivot_wider(
         id_cols = c(subject_id, hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
         names_from = drug_class,
         values_from = drug_class,
+        values_fn = ~ 1,  # Set to 1 when present
+        values_fill = 0,   # Set to 0 when absent
         names_prefix = "ab_class_is_"
     )
 ```
@@ -96,7 +86,16 @@ demographics <- admissions |>
         admission_type,
         insurance,
         diagnosis,
+    ) |>
+    pivot_wider(
+        id_cols = c(subject_id:dischtime),
+        names_from = c(admission_type),
+        values_from = c(admission_type),
+        names_prefix = "admit_is_",
+        values_fn = ~ 1,
+        values_fill = 0
     )
+demographics
 ```
 
 ## Load ICU status
@@ -107,8 +106,6 @@ icustays <- read_csv("mimic-demo/ICUSTAYS.csv") |>
         subject_id,
         hadm_id,
         icustay_id,
-        first_careunit,
-        last_careunit,
         icu_intime,
         icu_outtime
     )
@@ -226,6 +223,7 @@ training_data <- antibiotics |>
             TRUE,
             FALSE
         ),
+        admission_time_of_day = hour(admittime),
         # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
@@ -239,7 +237,7 @@ training_data <- antibiotics |>
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
         cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
     )  |>
-    select(-icu_intime, -icu_outtime)
+    select(-icu_intime, -icu_outtime, -dischtime)
 View(training_data)
 ```
 ```{r}
