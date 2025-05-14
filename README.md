@@ -23,30 +23,43 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - Gamma-glutamyltransferase (GLT, `item_id` 50927, LOINC `2324-2`)
     - [x] filter to prior to admin
     - [x] `pivot_wider()` such that each test as its own column, and Ab-prior tests are averaged
-        - could even include max? min?
-- [ ] Load blood counts data
-    - [ ] filter to prior to admin
-- [ ] Load renal fxn data
-    - [ ] filter to prior to admin
+        - [x] could even include max? min? - whole set of summary stats done
+- [x] Load blood counts data
+    - [x] filter to prior to admin
+- [x] Load renal fxn data
+    - [x] filter to prior to admin
 - [ ] Load comorbidities data (ICD codes)
     - [ ] filter to prior admissions; ICDs don't have attached datetimes anyway
 - [ ] Figure out how to handle dosage
-- [ ] Large data handling with `BigQuery` - should no longer be necessary now that Midway is up and running
+- [x] Large data handling with `BigQuery` - should no longer be necessary now that Midway is up and running
     - best idea so far: rewrite (Claude) data wrangling pipeline to SQL, then pass that in Google Cloud for each source CSV and then export those results, merge, train/test etc.
     - If BBJ can get us Midway access, that would also be good, since we can just `wget` the whole dataset there and train using their compute
         - update: Midway access likely. Store the data up there, have all the groups share a copy, and then we can use Midway compute for model training and we won't have to worry about fitting the whole training dataset in RAM 
+- [x] MIMIC-III Clinical on Midway
+- [ ] First XGBoost training run on demo dataset
+    - [ ] Create train/validation/test subsets
+        - `sklearn.train_test_split()`
+        - k-fold cross validation probably a good idea
+- [ ] First logistic regression training run on demo dataset
 - [ ] Simple logistic regression for `cdiff_flag ~ admin_time_since_admit`
     - because Austin is curious
 - [ ] Select final feature set 
-- [ ] Create train/validation/test subsets
-    - `sklearn.train_test_split()`
-    - k-fold cross validation probably a good idea
-    - MIMIC IV as test set? would be a nice forward comparison
-- [ ] Implement logistic regression
+- [ ] `git pull` on Midway
+- [ ] Run data pull on Midway
+- [ ] Implement logistic regression on Midway
     - Check OR
-- [ ] Implement XGBoost
+- [ ] Implement XGBoost on Midway
 - [ ] Figure out model evaluation; will be AUPRC given low case prevalence
+- [ ] Sensitivity analyses:
+    - [ ] Timing
+        - [ ] 1 day
+        - [ ] 2 days
+        - [ ] 7 days
+        - [ ] 30 days
+    - [ ] Label formula
 - [ ] Secondary endpoint: severe C. diff
+    - [ ] Define label for this
+    - [ ] Implement 
 - [ ] Unsupervised clustering of cases for identifying cryptic C-diff?
     - Is case similarity sufficiently specific, or would this be dastardly falsely positive?
     - any way to follow up and validate?
