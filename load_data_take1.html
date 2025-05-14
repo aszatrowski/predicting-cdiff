@@ -354,6 +354,9 @@ display: none;
 
 <div id="data-loading-and-cleaning" class="section level1">
 <h1>Data loading and cleaning</h1>
+<div id="major-settings" class="section level2">
+<h2>Major settings:</h2>
+<pre class="r"><code>time_delta &lt;- 30 # days</code></pre>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
@@ -373,6 +376,7 @@ display: none;
 ## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
 <div id="generate-sample-of-unique-antibiotic-administrations" class="section level2">
 <h2>Generate sample of unique antibiotic administrations</h2>
 <pre class="r"><code>antibiotics &lt;- read_csv(&quot;mimic-demo/PRESCRIPTIONS.csv&quot;) |&gt;
@@ -389,18 +393,14 @@ display: none;
         antibiotics_list,
         by = c(&quot;drug&quot; = &quot;Antibiotic&quot;)
     ) |&gt;
-    select(
-        row_id,
-        subject_id,
-        hadm_id,
-        icustay_id,
-        antibiotic_key,
-        drug,
-        drug_class,
-        ab_startdate,
-        ab_enddate,
-        dose_val_rx,
-        dose_unit_rx)</code></pre>
+    pivot_wider(
+        id_cols = c(subject_id, hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
+        names_from = drug_class,
+        values_from = drug_class,
+        values_fn = ~ 1,  # Set to 1 when present
+        values_fill = 0,   # Set to 0 when absent
+        names_prefix = &quot;ab_class_is_&quot;
+    )</code></pre>
 <pre><code>## Rows: 10398 Columns: 19
 ## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
@@ -507,7 +507,32 @@ display: none;
         admission_type,
         insurance,
         diagnosis,
-    )</code></pre>
+    ) |&gt;
+    pivot_wider(
+        id_cols = c(subject_id:dischtime),
+        names_from = c(admission_type),
+        values_from = c(admission_type),
+        names_prefix = &quot;admit_is_&quot;,
+        values_fn = ~ 1,
+        values_fill = 0
+    )
+demographics</code></pre>
+<pre><code>## # A tibble: 129 × 9
+##    subject_id hadm_id is_female dob                 admittime          
+##         &lt;dbl&gt;   &lt;dbl&gt; &lt;lgl&gt;     &lt;dttm&gt;              &lt;dttm&gt;             
+##  1      10006  142345 TRUE      2094-03-05 00:00:00 2164-10-23 21:09:00
+##  2      10011  105331 TRUE      2090-06-05 00:00:00 2126-08-14 22:32:00
+##  3      10013  165520 TRUE      2038-09-03 00:00:00 2125-10-04 23:36:00
+##  4      10017  199207 TRUE      2075-09-21 00:00:00 2149-05-26 17:19:00
+##  5      10019  177759 FALSE     2114-06-20 00:00:00 2163-05-14 20:43:00
+##  6      10026  103770 TRUE      1895-05-17 00:00:00 2195-05-17 07:39:00
+##  7      10027  199395 TRUE      2108-01-15 00:00:00 2190-07-13 07:15:00
+##  8      10029  132349 FALSE     2061-04-10 00:00:00 2139-09-22 10:58:00
+##  9      10032  140372 FALSE     2050-03-29 00:00:00 2138-04-02 19:52:00
+## 10      10033  157235 TRUE      2051-04-21 00:00:00 2132-12-05 02:46:00
+## # ℹ 119 more rows
+## # ℹ 4 more variables: dischtime &lt;dttm&gt;, admit_is_EMERGENCY &lt;dbl&gt;,
+## #   admit_is_ELECTIVE &lt;dbl&gt;, admit_is_URGENT &lt;dbl&gt;</code></pre>
 </div>
 <div id="load-icu-status" class="section level2">
 <h2>Load ICU status</h2>
@@ -517,8 +542,6 @@ display: none;
         subject_id,
         hadm_id,
         icustay_id,
-        first_careunit,
-        last_careunit,
         icu_intime,
         icu_outtime
     )</code></pre>
@@ -585,31 +608,145 @@ liver_labs &lt;- labvalues |&gt;
     rename(lab_charttime = charttime) |&gt;
     # filter to labs *prior* to admin time
     filter(lab_charttime &lt; ab_startdate) |&gt;
+    # Summarize each lab value, grouped by administration instance
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) |&gt;
+    summarize(
+        mean = mean(valuenum, na.rm = TRUE),
+        median = median(valuenum, na.rm = TRUE),
+        max = max(valuenum, na.rm = TRUE),
+        min = min(valuenum, na.rm = TRUE),
+        # q10 = quantile(valuenum, 0.1, na.rm = TRUE),
+        # q90 = quantile(valuenum, 0.9, na.rm = TRUE),
+        range = max(valuenum, na.rm = TRUE) - min(valuenum, na.rm = TRUE),
+        sd = replace_na(sd(valuenum, na.rm = TRUE), 0),
+        iqr = IQR(valuenum, na.rm = TRUE),
+        first = first(valuenum, na_rm = TRUE),
+        last = last(valuenum, na_rm = TRUE),
+        count = length(valuenum),
+        .groups = &quot;drop&quot;
+    ) |&gt;
+    # WARNING: NAs appear for patients with zero instances of a given lab; these are only implicit in the unpivoted data, since test_name will just skip that lab for that patien
     pivot_wider(
-        id_cols = c(
-            subject_id,
-            hadm_id,
-            antibiotic_key),
+        id_cols = c(subject_id, hadm_id, antibiotic_key),
         names_from = test_name,
-        values_from = c(valuenum),
-        # Average over each lab value type
-        values_fn = ~ mean(.x, na.rm = TRUE),
-        names_prefix = &quot;mean_prior_&quot;)
-
-# View(liver_labs)
-# write_csv(liver_labs, &quot;liver_labs.csv&quot;)</code></pre>
+        values_from = !(c(subject_id, hadm_id, antibiotic_key, test_name)),
+        names_sep = &quot;_&quot;
+    )</code></pre>
 </div>
 <div id="renal" class="section level3">
 <h3>Renal</h3>
+<p>NOTE: I CHOSE THE MOST COMMONLY APPEARING LAB EVENT VALUES AND
+SPECIFICALLY CHOSE FOR VALUES INSIDE THE BLOOD!</p>
+<pre class="r"><code>renal_lab_itemids &lt;- list(
+    creatinine = 50912,
+    bun = 51006,
+    potassium = 50971,
+    sodium = 50983,
+    chloride = 50902
+)
+
+# Set QC thresholds for lab values
+renal_qc_thresholds &lt;- c(
+    &quot;creatinine&quot; = 15,
+    &quot;bun&quot; = 200,
+    &quot;potassium&quot; = 10,
+    &quot;sodium&quot; = 200,
+    &quot;chloride&quot; = 160
+)
+
+renal_labs &lt;- labvalues |&gt;
+    filter(itemid %in% renal_lab_itemids) |&gt;
+    mutate(
+        test_name = as.factor(case_when(
+            itemid == renal_lab_itemids$creatinine ~ names(renal_lab_itemids)[1],
+            itemid == renal_lab_itemids$bun ~ names(renal_lab_itemids)[2],
+            itemid == renal_lab_itemids$potassium ~ names(renal_lab_itemids)[3],
+            itemid == renal_lab_itemids$sodium ~ names(renal_lab_itemids)[4],
+            itemid == renal_lab_itemids$chloride ~ names(renal_lab_itemids)[5]
+        ))
+    ) |&gt;
+    filter(valuenum &lt; renal_qc_thresholds[test_name]) |&gt;
+    right_join(antibiotics, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;), relationship = &quot;many-to-many&quot;) |&gt;
+    rename(lab_charttime = charttime) |&gt;
+    filter(lab_charttime &lt; ab_startdate) |&gt;
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) |&gt;
+    summarize(
+        mean = mean(valuenum, na.rm = TRUE),
+        median = median(valuenum, na.rm = TRUE),
+        max = max(valuenum, na.rm = TRUE),
+        min = min(valuenum, na.rm = TRUE),
+        range = max(valuenum, na.rm = TRUE) - min(valuenum, na.rm = TRUE),
+        sd = replace_na(sd(valuenum, na.rm = TRUE), 0),
+        iqr = IQR(valuenum, na.rm = TRUE),
+        first = first(valuenum, na_rm = TRUE),
+        last = last(valuenum, na_rm = TRUE),
+        count = length(valuenum),
+        .groups = &quot;drop&quot;
+    ) |&gt;
+    pivot_wider(
+        id_cols = c(subject_id, hadm_id, antibiotic_key),
+        names_from = test_name,
+        values_from = !(c(subject_id, hadm_id, antibiotic_key, test_name)),
+        names_sep = &quot;_&quot;
+    )</code></pre>
 </div>
 <div id="blood-counts" class="section level3">
 <h3>Blood counts</h3>
+<pre class="r"><code># item_id dictionary
+blood_lab_itemids &lt;- list(
+    hemoglobin = 51222,
+    hematocrit = 51221,
+    white_blood_cells = 51300,
+    platelets = 51265
+)
+
+# Set QC thresholds for lab values
+blood_qc_thresholds &lt;- c(
+    &quot;hemoglobin&quot; = 25,
+    &quot;hematocrit&quot; = 75,
+    &quot;white_blood_cells&quot; = 100,
+    &quot;platelets&quot; = 1500
+)
+
+blood_labs &lt;- labvalues |&gt;
+    filter(itemid %in% blood_lab_itemids) |&gt;
+    mutate(
+        test_name = as.factor(case_when(
+            itemid == blood_lab_itemids$hemoglobin ~ names(blood_lab_itemids)[1],
+            itemid == blood_lab_itemids$hematocrit ~ names(blood_lab_itemids)[2],
+            itemid == blood_lab_itemids$white_blood_cells ~ names(blood_lab_itemids)[3],
+            itemid == blood_lab_itemids$platelets ~ names(blood_lab_itemids)[4]
+        ))
+    ) |&gt;
+    filter(valuenum &lt; blood_qc_thresholds[test_name]) |&gt;
+    right_join(antibiotics, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;), relationship = &quot;many-to-many&quot;) |&gt;
+    rename(lab_charttime = charttime) |&gt;
+    filter(lab_charttime &lt; ab_startdate) |&gt;
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) |&gt;
+    summarize(
+        mean = mean(valuenum, na.rm = TRUE),
+        median = median(valuenum, na.rm = TRUE),
+        max = max(valuenum, na.rm = TRUE),
+        min = min(valuenum, na.rm = TRUE),
+        range = max(valuenum, na.rm = TRUE) - min(valuenum, na.rm = TRUE),
+        sd = replace_na(sd(valuenum, na.rm = TRUE), 0),
+        iqr = IQR(valuenum, na.rm = TRUE),
+        first = first(valuenum, na_rm = TRUE),
+        last = last(valuenum, na_rm = TRUE),
+        count = length(valuenum),
+        .groups = &quot;drop&quot;
+    ) |&gt;
+    pivot_wider(
+        id_cols = c(subject_id, hadm_id, antibiotic_key),
+        names_from = test_name,
+        values_from = !(c(subject_id, hadm_id, antibiotic_key, test_name)),
+        names_sep = &quot;_&quot;
+    )</code></pre>
 </div>
 </div>
 <div id="join-everything-together-and-compute-new-columns" class="section level2">
 <h2>Join everything together and compute new columns</h2>
 <pre class="r"><code>training_data &lt;- antibiotics |&gt;
-    select(-row_id) |&gt;
     left_join(
         cdiff_tests,
         by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)
@@ -634,6 +771,14 @@ liver_labs &lt;- labvalues |&gt;
         liver_labs,
         by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;antibiotic_key&quot;),
     ) |&gt;
+    left_join(
+        renal_labs,
+        by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;antibiotic_key&quot;),
+    ) |&gt;
+    left_join(
+        blood_labs,
+        by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;antibiotic_key&quot;),
+    ) |&gt;
     mutate(
         # generate age column
         age_at_admin = ab_startdate - dob,
@@ -644,12 +789,13 @@ liver_labs &lt;- labvalues |&gt;
             TRUE,
             FALSE
         ),
+        admission_time_of_day = hour(admittime),
         # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
-            (cdiff_charttime &gt;= ab_startdate &amp; cdiff_charttime &lt;= ab_startdate + ddays(30))
+            (cdiff_charttime &gt;= ab_startdate &amp; cdiff_charttime &lt;= ab_startdate + ddays(time_delta))
             # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was &lt;30 days after Ab start
-            | (cdiff_icd9 == &quot;00845&quot; &amp; dischtime &lt;= ab_startdate + ddays(30)),
+            | (cdiff_icd9 == &quot;00845&quot; &amp; dischtime &lt;= ab_startdate + ddays(time_delta)),
             # Assign TRUE/FALSE accordingly
             yes = TRUE,
             no = FALSE
@@ -657,7 +803,7 @@ liver_labs &lt;- labvalues |&gt;
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
         cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
     )  |&gt;
-    select(-icu_intime, -icu_outtime)
+    select(-icu_intime, -icu_outtime, -dischtime)
 # View(training_data)</code></pre>
 <pre class="r"><code>write_csv(training_data, &quot;training_data.csv&quot;)</code></pre>
 </div>
