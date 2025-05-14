@@ -157,7 +157,7 @@ liver_labs <- labvalues |>
     # filter to labs *prior* to admin time
     filter(lab_charttime < ab_startdate) |>
     # Summarize each lab value, grouped by administration instance
-    group_by(subject_id, hadm_id, antibiotic_key, test_name) %>%
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) |>
     summarize(
         mean = mean(valuenum, na.rm = TRUE),
         median = median(valuenum, na.rm = TRUE),
@@ -172,7 +172,7 @@ liver_labs <- labvalues |>
         last = last(valuenum, na_rm = TRUE),
         count = length(valuenum),
         .groups = "drop"
-    ) %>%
+    ) |>
     # WARNING: NAs appear for patients with zero instances of a given lab; these are only implicit in the unpivoted data, since test_name will just skip that lab for that patien
     pivot_wider(
         id_cols = c(subject_id, hadm_id, antibiotic_key),
@@ -180,13 +180,10 @@ liver_labs <- labvalues |>
         values_from = !(c(subject_id, hadm_id, antibiotic_key, test_name)),
         names_sep = "_"
     )
-# View(liver_labs)
-# write_csv(liver_labs, "liver_labs.csv")
 ```
 ### Renal
-
-# NOTE: I CHOSE THE MOST COMMONLY APPEARING LAB EVENT VALUES AND SPECIFICALLY CHOSE FOR VALUES INSIDE THE BLOOD! 
-
+NOTE: I CHOSE THE MOST COMMONLY APPEARING LAB EVENT VALUES AND SPECIFICALLY CHOSE FOR VALUES INSIDE THE BLOOD! 
+```{r}
 renal_lab_itemids <- list(
     creatinine = 50912,
     bun = 51006,
@@ -219,7 +216,7 @@ renal_labs <- labvalues |>
     right_join(antibiotics, by = c("subject_id", "hadm_id"), relationship = "many-to-many") |>
     rename(lab_charttime = charttime) |>
     filter(lab_charttime < ab_startdate) |>
-    group_by(subject_id, hadm_id, antibiotic_key, test_name) %>%
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) |>
     summarize(
         mean = mean(valuenum, na.rm = TRUE),
         median = median(valuenum, na.rm = TRUE),
@@ -232,10 +229,17 @@ renal_labs <- labvalues |>
         last = last(valuenum, na_rm = TRUE),
         count = length(valuenum),
         .groups = "drop"
-    ) 
-
+    ) |>
+    pivot_wider(
+        id_cols = c(subject_id, hadm_id, antibiotic_key),
+        names_from = test_name,
+        values_from = !(c(subject_id, hadm_id, antibiotic_key, test_name)),
+        names_sep = "_"
+    )
+```
 
 ### Blood counts
+```{r}
 # item_id dictionary
 blood_lab_itemids <- list(
     hemoglobin = 51222,
@@ -266,7 +270,7 @@ blood_labs <- labvalues |>
     right_join(antibiotics, by = c("subject_id", "hadm_id"), relationship = "many-to-many") |>
     rename(lab_charttime = charttime) |>
     filter(lab_charttime < ab_startdate) |>
-    group_by(subject_id, hadm_id, antibiotic_key, test_name) %>%
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) |>
     summarize(
         mean = mean(valuenum, na.rm = TRUE),
         median = median(valuenum, na.rm = TRUE),
@@ -275,12 +279,19 @@ blood_labs <- labvalues |>
         range = max(valuenum, na.rm = TRUE) - min(valuenum, na.rm = TRUE),
         sd = replace_na(sd(valuenum, na.rm = TRUE), 0),
         iqr = IQR(valuenum, na.rm = TRUE),
-        first = first(valuenum, na.rm = TRUE),
-        last = last(valuenum, na.rm = TRUE),
+        first = first(valuenum, na_rm = TRUE),
+        last = last(valuenum, na_rm = TRUE),
         count = length(valuenum),
         .groups = "drop"
+    ) |>
+    pivot_wider(
+        id_cols = c(subject_id, hadm_id, antibiotic_key),
+        names_from = test_name,
+        values_from = !(c(subject_id, hadm_id, antibiotic_key, test_name)),
+        names_sep = "_"
     )
 
+```
 ## Join everything together and compute new columns
 ```{r}
 training_data <- antibiotics |>
@@ -308,6 +319,14 @@ training_data <- antibiotics |>
         liver_labs,
         by = c("subject_id", "hadm_id", "antibiotic_key"),
     ) |>
+    left_join(
+        renal_labs,
+        by = c("subject_id", "hadm_id", "antibiotic_key"),
+    ) |>
+    left_join(
+        blood_labs,
+        by = c("subject_id", "hadm_id", "antibiotic_key"),
+    ) |>
     mutate(
         # generate age column
         age_at_admin = ab_startdate - dob,
@@ -333,7 +352,7 @@ training_data <- antibiotics |>
         cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
     )  |>
     select(-icu_intime, -icu_outtime, -dischtime)
-View(training_data)
+# View(training_data)
 ```
 ```{r}
 write_csv(training_data, "training_data.csv")
