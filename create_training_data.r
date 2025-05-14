@@ -1,10 +1,8 @@
+library(tidyverse)
 execution_start <- now()
 # Data loading and cleaning
 ## Major settings:
-
-library(tidyverse)
 time_delta <- ddays(30) # days
-
 antibiotics_list <- read_csv("hospital-antibiotics.csv")
 
 
@@ -25,7 +23,9 @@ antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
         by = c("drug" = "Antibiotic")
     ) |>
     pivot_wider(
-        id_cols = c(subject_id, hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
+        id_cols = c(
+		    subject_id,
+		    hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
         names_from = drug_class,
         values_from = drug_class,
         values_fn = ~ 1,  # Set to 1 when present
