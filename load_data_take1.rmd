@@ -184,7 +184,102 @@ liver_labs <- labvalues |>
 # write_csv(liver_labs, "liver_labs.csv")
 ```
 ### Renal
+
+# NOTE: I CHOSE THE MOST COMMONLY APPEARING LAB EVENT VALUES AND SPECIFICALLY CHOSE FOR VALUES INSIDE THE BLOOD! 
+
+renal_lab_itemids <- list(
+    creatinine = 50912,
+    bun = 51006,
+    potassium = 50971,
+    sodium = 50983,
+    chloride = 50902
+)
+
+# Set QC thresholds for lab values
+renal_qc_thresholds <- c(
+    "creatinine" = 15,
+    "bun" = 200,
+    "potassium" = 10,
+    "sodium" = 200,
+    "chloride" = 160
+)
+
+renal_labs <- labvalues |>
+    filter(itemid %in% renal_lab_itemids) |>
+    mutate(
+        test_name = as.factor(case_when(
+            itemid == renal_lab_itemids$creatinine ~ names(renal_lab_itemids)[1],
+            itemid == renal_lab_itemids$bun ~ names(renal_lab_itemids)[2],
+            itemid == renal_lab_itemids$potassium ~ names(renal_lab_itemids)[3],
+            itemid == renal_lab_itemids$sodium ~ names(renal_lab_itemids)[4],
+            itemid == renal_lab_itemids$chloride ~ names(renal_lab_itemids)[5]
+        ))
+    ) |>
+    filter(valuenum < renal_qc_thresholds[test_name]) |>
+    right_join(antibiotics, by = c("subject_id", "hadm_id"), relationship = "many-to-many") |>
+    rename(lab_charttime = charttime) |>
+    filter(lab_charttime < ab_startdate) |>
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) %>%
+    summarize(
+        mean = mean(valuenum, na.rm = TRUE),
+        median = median(valuenum, na.rm = TRUE),
+        max = max(valuenum, na.rm = TRUE),
+        min = min(valuenum, na.rm = TRUE),
+        range = max(valuenum, na.rm = TRUE) - min(valuenum, na.rm = TRUE),
+        sd = replace_na(sd(valuenum, na.rm = TRUE), 0),
+        iqr = IQR(valuenum, na.rm = TRUE),
+        first = first(valuenum, na_rm = TRUE),
+        last = last(valuenum, na_rm = TRUE),
+        count = length(valuenum),
+        .groups = "drop"
+    ) 
+
+
 ### Blood counts
+# item_id dictionary
+blood_lab_itemids <- list(
+    hemoglobin = 51222,
+    hematocrit = 51221,
+    white_blood_cells = 51300,
+    platelets = 51265
+)
+
+# Set QC thresholds for lab values
+blood_qc_thresholds <- c(
+    "hemoglobin" = 25,
+    "hematocrit" = 75,
+    "white_blood_cells" = 100,
+    "platelets" = 1500
+)
+
+blood_labs <- labvalues |>
+    filter(itemid %in% blood_lab_itemids) |>
+    mutate(
+        test_name = as.factor(case_when(
+            itemid == blood_lab_itemids$hemoglobin ~ names(blood_lab_itemids)[1],
+            itemid == blood_lab_itemids$hematocrit ~ names(blood_lab_itemids)[2],
+            itemid == blood_lab_itemids$white_blood_cells ~ names(blood_lab_itemids)[3],
+            itemid == blood_lab_itemids$platelets ~ names(blood_lab_itemids)[4]
+        ))
+    ) |>
+    filter(valuenum < blood_qc_thresholds[test_name]) |>
+    right_join(antibiotics, by = c("subject_id", "hadm_id"), relationship = "many-to-many") |>
+    rename(lab_charttime = charttime) |>
+    filter(lab_charttime < ab_startdate) |>
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) %>%
+    summarize(
+        mean = mean(valuenum, na.rm = TRUE),
+        median = median(valuenum, na.rm = TRUE),
+        max = max(valuenum, na.rm = TRUE),
+        min = min(valuenum, na.rm = TRUE),
+        range = max(valuenum, na.rm = TRUE) - min(valuenum, na.rm = TRUE),
+        sd = replace_na(sd(valuenum, na.rm = TRUE), 0),
+        iqr = IQR(valuenum, na.rm = TRUE),
+        first = first(valuenum, na.rm = TRUE),
+        last = last(valuenum, na.rm = TRUE),
+        count = length(valuenum),
+        .groups = "drop"
+    )
 
 ## Join everything together and compute new columns
 ```{r}
