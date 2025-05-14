@@ -153,17 +153,30 @@ liver_labs <- labvalues |>
     rename(lab_charttime = charttime) |>
     # filter to labs *prior* to admin time
     filter(lab_charttime < ab_startdate) |>
+    # Summarize each lab value, grouped by administration instance
+    group_by(subject_id, hadm_id, antibiotic_key, test_name) %>%
+    summarize(
+        mean = mean(valuenum, na.rm = TRUE),
+        median = median(valuenum, na.rm = TRUE),
+        max = max(valuenum, na.rm = TRUE),
+        min = min(valuenum, na.rm = TRUE),
+        # q10 = quantile(valuenum, 0.1, na.rm = TRUE),
+        # q90 = quantile(valuenum, 0.9, na.rm = TRUE),
+        range = max(valuenum, na.rm = TRUE) - min(valuenum, na.rm = TRUE),
+        sd = replace_na(sd(valuenum, na.rm = TRUE), 0),
+        iqr = IQR(valuenum, na.rm = TRUE),
+        first = first(valuenum, na_rm = TRUE),
+        last = last(valuenum, na_rm = TRUE),
+        count = length(valuenum),
+        .groups = "drop"
+    ) %>%
+    # WARNING: NAs appear for patients with zero instances of a given lab; these are only implicit in the unpivoted data, since test_name will just skip that lab for that patien
     pivot_wider(
-        id_cols = c(
-            subject_id,
-            hadm_id,
-            antibiotic_key),
+        id_cols = c(subject_id, hadm_id, antibiotic_key),
         names_from = test_name,
-        values_from = c(valuenum),
-        # Average over each lab value type
-        values_fn = ~ mean(.x, na.rm = TRUE),
-        names_prefix = "mean_prior_")
-
+        values_from = !(c(subject_id, hadm_id, antibiotic_key, test_name)),
+        names_sep = "_"
+    )
 # View(liver_labs)
 # write_csv(liver_labs, "liver_labs.csv")
 ```
