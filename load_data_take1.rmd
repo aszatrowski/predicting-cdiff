@@ -20,18 +20,24 @@ antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
         antibiotics_list,
         by = c("drug" = "Antibiotic")
     ) |>
-    select(
-        row_id,
-        subject_id,
-        hadm_id,
-        icustay_id,
-        antibiotic_key,
-        drug,
-        drug_class,
-        ab_startdate,
-        ab_enddate,
-        dose_val_rx,
-        dose_unit_rx)
+    # select(
+    #     # row_id,
+    #     subject_id,
+    #     hadm_id,
+    #     icustay_id,
+    #     antibiotic_key,
+    #     drug,
+    #     drug_class,
+    #     ab_startdate,
+    #     ab_enddate,
+    #     dose_val_rx,
+    #     dose_unit_rx) |>
+    pivot_wider(
+        id_cols = c(subject_id, hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
+        names_from = drug_class,
+        values_from = drug_class,
+        names_prefix = "ab_class_is_"
+    )
 ```
 
 ## Load *C. diff* diagnosis info
@@ -186,7 +192,6 @@ liver_labs <- labvalues |>
 ## Join everything together and compute new columns
 ```{r}
 training_data <- antibiotics |>
-    select(-row_id) |>
     left_join(
         cdiff_tests,
         by = c("subject_id", "hadm_id")
