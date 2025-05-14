@@ -6,16 +6,16 @@ Ampicillin,Penicillin
 Ampicillin-Sulbactam,Penicillin
 Azithromycin,Macrolide
 Aztreonam,Monobactam
-Cefazolin,1st Generation Cephalosporin
-Cefepime,4th Generation Cephalosporin
-Cefotaxime,3rd Generation Cephalosporin
-Cefoxitin,2nd Generation Cephalosporin
-Ceftaroline,5th Generation Cephalosporin
-Ceftazidime,3rd Generation Cephalosporin
-Ceftazidime-Avibactam,3rd Generation Cephalosporin
-Ceftolozane-Tazobactam,3rd Generation Cephalosporin
-Ceftriaxone,3rd Generation Cephalosporin
-Cefuroxime,2nd Generation Cephalosporin
+Cefazolin,Cephalosporin
+Cefepime,Cephalosporin
+Cefotaxime,Cephalosporin
+Cefoxitin,Cephalosporin
+Ceftaroline,Cephalosporin
+Ceftazidime,Cephalosporin
+Ceftazidime-Avibactam,Cephalosporin
+Ceftolozane-Tazobactam,Cephalosporin
+Ceftriaxone,Cephalosporin
+Cefuroxime,Cephalosporin
 Ciprofloxacin,Fluoroquinolone
 Clarithromycin,Macrolide
 Clindamycin,Lincosamide
