@@ -1,6 +1,13 @@
+---
+title: "Predicting C. diff Data Pipeline Draft"
+---
 # Data loading and cleaning
+## Major settings:
 ```{r}
 library(tidyverse)
+time_delta <- ddays(30) # days
+```
+```{r}
 antibiotics_list <- read_csv("hospital-antibiotics.csv")
 ```
 
@@ -341,9 +348,9 @@ training_data <- antibiotics |>
         # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
-            (cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_startdate + ddays(30))
+            (cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_startdate + time_delta)
             # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
-            | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + ddays(30)),
+            | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + time_delta),
             # Assign TRUE/FALSE accordingly
             yes = TRUE,
             no = FALSE
