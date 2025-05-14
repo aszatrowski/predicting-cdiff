@@ -31,6 +31,8 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [ ] Load comorbidities data (ICD codes)
     - [ ] filter to prior admissions; ICDs don't have attached datetimes anyway
 - [ ] Figure out how to handle dosage
+     - [x] For now, just antibiotic class
+     - [x] BBJ says count everything that's timestamped within an hour as a single administration, and then count doses, but idk if that exactly works 
 - [x] Large data handling with `BigQuery` - should no longer be necessary now that Midway is up and running
     - best idea so far: rewrite (Claude) data wrangling pipeline to SQL, then pass that in Google Cloud for each source CSV and then export those results, merge, train/test etc.
     - If BBJ can get us Midway access, that would also be good, since we can just `wget` the whole dataset there and train using their compute
