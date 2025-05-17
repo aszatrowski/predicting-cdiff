@@ -24,8 +24,7 @@ antibiotics <- read_csv("mimic-demo/PRESCRIPTIONS.csv") |>
     ) |>
     pivot_wider(
         id_cols = c(
-		    subject_id,
-		    hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
+            subject_id, hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
         names_from = drug_class,
         values_from = drug_class,
         values_fn = ~ 1,  # Set to 1 when present
@@ -76,8 +75,8 @@ demographics <- admissions |>
     mutate(
         is_female = ifelse(
             gender == "F",
-            yes = TRUE,
-            no = FALSE
+            yes = 1,
+            no = 0
         )
     ) |>
     select(
@@ -333,15 +332,15 @@ training_data <- antibiotics |>
     ) |>
     mutate(
         # generate age column
-        age_at_admin = ab_startdate - dob,
+        age_at_admin = as.integer(ab_startdate - dob),
         # generate variable for time since admission at Ab admin, mark 0 if same day since datetimes for Abs are not available
-        admin_time_since_admission = pmax(ab_startdate - admittime, 0),
+        admin_time_since_admission = as.integer(pmax(ab_startdate - admittime, 0)),
         in_icu = ifelse(
             ab_startdate >= icu_intime & ab_startdate <= icu_outtime,
             TRUE,
             FALSE
         ),
-        admission_time_of_day = hour(admittime),
+        admission_time_of_day = as.integer(hour(admittime)),
         # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
@@ -349,16 +348,39 @@ training_data <- antibiotics |>
             # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
             | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + time_delta),
             # Assign TRUE/FALSE accordingly
-            yes = TRUE,
-            no = FALSE
+            yes = 1,
+            no = 0
         ),
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
-        cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
+        cdiff_30d_flag = replace_na(cdiff_30d_flag, 0)
     )  |>
-    select(-icu_intime, -icu_outtime, -dischtime)
+    select(
+        # remove ID columns
+        -antibiotic_key,
+        -subject_id,
+        -hadm_id,
+        -icustay_id,
+        # only necessary for generating label/other data:
+        -ab_startdate,
+        -ab_enddate,
+        -cdiff_charttime,
+        -org_itemid,
+        -cdiff_icd9,
+        -diarrhea_icd9,
+        -dob,
+        -admittime,
+        -in_icu,
+        -icu_intime,
+        -icu_outtime,
+        -dischtime)
 # View(training_data)
 
 process_stop <- now()
+training_data_coltypes <- training_data  %>%
+    summarise_all(class) %>%
+    t() |>
+    as_tibble()
+print(count(training_data_coltypes, V1))
 write_csv(training_data, "training_data.csv", progress = TRUE)
 write_stop <- now()
 print(paste("Processing time:", format(process_stop - execution_start, digits = 4)))
