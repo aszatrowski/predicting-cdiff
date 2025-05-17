@@ -10,8 +10,8 @@ antibiotics_list <- read_csv("predicting-cdiff/hospital-antibiotics.csv")
 ## Generate sample of unique antibiotic administrations
 cat("Loading antibiotics...\n\n")
 antibiotics <- read_csv("physionet.org/files/mimiciii/1.4/PRESCRIPTIONS.csv.gz") |>
-	# for reasons passing understanding, the demo dataset has all-lowercase colnames and the full size has all caps
-	rename_all(~str_to_lower(.x)) |>
+    # for reasons passing understanding, the demo dataset has all-lowercase colnames and the full size has all caps
+    rename_all(~str_to_lower(.x)) |>
     filter(drug %in% antibiotics_list$Antibiotic) |>
     mutate(
         drug = as.factor(drug),
@@ -27,8 +27,8 @@ antibiotics <- read_csv("physionet.org/files/mimiciii/1.4/PRESCRIPTIONS.csv.gz")
     ) |>
     pivot_wider(
         id_cols = c(
-		    subject_id,
-		    hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
+            subject_id,
+            hadm_id, icustay_id, antibiotic_key, ab_startdate, ab_enddate),
         names_from = drug_class,
         values_from = drug_class,
         values_fn = ~ 1,  # Set to 1 when present
@@ -40,7 +40,7 @@ antibiotics <- read_csv("physionet.org/files/mimiciii/1.4/PRESCRIPTIONS.csv.gz")
 ## Load *C. diff* diagnosis info
 
 cdiff_tests <- read_csv("./physionet.org/files/mimiciii/1.4/MICROBIOLOGYEVENTS.csv.gz") |>
-	rename_all(~str_to_lower(.x)) |>
+    rename_all(~str_to_lower(.x)) |>
     filter(org_itemid == 80139) |> # code for C. difficile
     rename(
         cdiff_charttime = charttime,
@@ -52,7 +52,7 @@ cdiff_tests <- read_csv("./physionet.org/files/mimiciii/1.4/MICROBIOLOGYEVENTS.c
         org_itemid
     )
 cdiff_icd9 <- read_csv("./physionet.org/files/mimiciii/1.4/DIAGNOSES_ICD.csv.gz") |>
-	rename_all(~str_to_lower(.x)) |>
+    rename_all(~str_to_lower(.x)) |>
     filter(icd9_code == "00845") |> # code for C. difficile
     rename(cdiff_icd9 = icd9_code) |>
     select(
@@ -62,7 +62,7 @@ cdiff_icd9 <- read_csv("./physionet.org/files/mimiciii/1.4/DIAGNOSES_ICD.csv.gz"
     )
 
 diarrhea_icd9 <- read_csv("./physionet.org/files/mimiciii/1.4/DIAGNOSES_ICD.csv.gz") |>
-	rename_all(~str_to_lower(.x)) |>
+    rename_all(~str_to_lower(.x)) |>
     filter(icd9_code == "78791") |> # code for C. difficile
     rename(diarrhea_icd9 = icd9_code) |>
     select(
@@ -76,9 +76,9 @@ cat("COMPLETE.\n")
 ## Load patient demographics
 cat("Loading demographics...\n")
 admissions <- read_csv("./physionet.org/files/mimiciii/1.4/ADMISSIONS.csv.gz") |>
-	rename_all(~str_to_lower(.x)) 
+    rename_all(~str_to_lower(.x))
 patients <- read_csv("./physionet.org/files/mimiciii/1.4/PATIENTS.csv.gz") |>
-	rename_all(~str_to_lower(.x))
+    rename_all(~str_to_lower(.x))
 
 cat("COMPLETE.\n")
 cat("Processing demographics...\n")
@@ -87,8 +87,8 @@ demographics <- admissions |>
     mutate(
         is_female = ifelse(
             gender == "F",
-            yes = TRUE,
-            no = FALSE
+            yes = 1,
+            no = 0
         )
     ) |>
     select(
@@ -115,7 +115,7 @@ cat("COMPLETE.\n")
 ##Load ICU status
 cat("Loading ICU stays...\n")
 icustays <- read_csv("./physionet.org/files/mimiciii/1.4/ICUSTAYS.csv.gz") |>
-	rename_all(~str_to_lower(.x)) |>
+    rename_all(~str_to_lower(.x)) |>
     rename(icu_intime = intime, icu_outtime = outtime) |>
     select(
         subject_id,
@@ -130,10 +130,10 @@ cat("COMPLETE.\n")
 ## Load lab values
 cat("Loading lab values...\n")
 labvalues <- read_csv("./physionet.org/files/mimiciii/1.4/LABEVENTS.csv.gz") |>
-	rename_all(~str_to_lower(.x))
+    rename_all(~str_to_lower(.x))
 cat("COMPLETE.\n")
 ### Liver
-cat('Processing liver values...')
+cat("Processing liver values...")
 # item_id dictionary
 liver_lab_itemids <- list(
     bilirubin_total = 50885,
@@ -231,9 +231,9 @@ renal_labs <- labvalues |>
     ) |>
     filter(valuenum < renal_qc_thresholds[test_name]) |>
     right_join(
-	       antibiotics,
-	       by = c("subject_id", "hadm_id"),
-	       relationship = "many-to-many") |>
+        antibiotics,
+        by = c("subject_id", "hadm_id"),
+        relationship = "many-to-many") |>
     rename(lab_charttime = charttime) |>
     filter(lab_charttime < ab_startdate) |>
     group_by(subject_id, hadm_id, antibiotic_key, test_name) |>
@@ -349,15 +349,15 @@ training_data <- antibiotics |>
     ) |>
     mutate(
         # generate age column
-        age_at_admin = ab_startdate - dob,
+        age_at_admin = as.integer(ab_startdate - dob),
         # generate variable for time since admission at Ab admin, mark 0 if same day since datetimes for Abs are not available
-        admin_time_since_admission = pmax(ab_startdate - admittime, 0),
+        admin_time_since_admission = as.integer(pmax(ab_startdate - admittime, 0)),
         in_icu = ifelse(
             ab_startdate >= icu_intime & ab_startdate <= icu_outtime,
             TRUE,
             FALSE
         ),
-        admission_time_of_day = hour(admittime),
+        admission_time_of_day = as.integer(hour(admittime)),
         # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
@@ -365,16 +365,40 @@ training_data <- antibiotics |>
             # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
             | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + time_delta),
             # Assign TRUE/FALSE accordingly
-            yes = TRUE,
-            no = FALSE
+            yes = 1,
+            no = 0
         ),
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
-        cdiff_30d_flag = replace_na(cdiff_30d_flag, FALSE)
+        cdiff_30d_flag = replace_na(cdiff_30d_flag, 0)
     )  |>
-    select(-icu_intime, -icu_outtime, -dischtime)
+    select(
+        # remove ID columns
+        -antibiotic_key,
+        -subject_id,
+        -hadm_id,
+        -icustay_id,
+        # only necessary for generating label/other data:
+        -ab_startdate,
+        -ab_enddate,
+        -cdiff_charttime,
+        -org_itemid,
+        -cdiff_icd9,
+        -diarrhea_icd9,
+        -dob,
+        -admittime,
+        -in_icu,
+        -icu_intime,
+        -icu_outtime,
+        -dischtime)
 # View(training_data)
+
 cat("COMPLETE.\n")
 process_stop <- now()
+training_data_coltypes <- training_data  %>%
+    summarise_all(class) %>%
+    t() |>
+    as_tibble()
+print(count(training_data_coltypes, V1))
 cat("Writing final compressed CSV...\n")
 write_csv(training_data, "predicting-cdiff/training_data_full.csv.gz", progress = TRUE)
 cat("COMPLETE.\n")

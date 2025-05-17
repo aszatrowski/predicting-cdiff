@@ -98,7 +98,6 @@ demographics <- admissions |>
         values_fn = ~ 1,
         values_fill = 0
     )
-demographics
 
 
 ## Load ICU status
