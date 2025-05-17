@@ -28,6 +28,9 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - [x] filter to prior to admin
 - [x] Load renal fxn data
     - [x] filter to prior to admin
+- [ ] MISSINGNESS IMPUTATION
+    - [ ] Mean imputation
+    - [ ] Try kNN
 - [ ] Load comorbidities data (ICD codes)
     - [ ] filter to prior admissions; ICDs don't have attached datetimes anyway
 - [ ] Figure out how to handle dosage
