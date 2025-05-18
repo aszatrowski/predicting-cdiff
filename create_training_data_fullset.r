@@ -385,7 +385,8 @@ training_data <- antibiotics |>
     )  |>
     # couple of QC things:
     filter(
-        age_at_admin < 100
+        age_at_admin < 100,
+        admin_time_since_admission < 36000
     ) |>
     select(
         # remove ID columns
