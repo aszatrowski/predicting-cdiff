@@ -50,7 +50,7 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - because Austin is curious
 - [ ] Select final feature set 
 - [ ] `git pull` on Midway
-- [ ] Run data pull on Midway
+- [x] Run data pull on Midway
 - [ ] Implement logistic regression on Midway
     - Check OR
 - [ ] Implement XGBoost on Midway
@@ -62,9 +62,11 @@ This repository contains code for predicting *Clostridioides difficile* infectio
         - [ ] 7 days
         - [ ] 30 days
     - [ ] Label formula
+    - [ ] With/without gamma-glutamyltransferase (only 1 non-missing value)
 - [ ] Secondary endpoint: severe C. diff
     - [ ] Define label for this
     - [ ] Implement 
+- [ ] Survival analysis!
 - [ ] Unsupervised clustering of cases for identifying cryptic C-diff?
     - Is case similarity sufficiently specific, or would this be dastardly falsely positive?
     - any way to follow up and validate?
