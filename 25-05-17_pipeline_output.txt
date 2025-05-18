@@ -1,0 +1,128 @@
+> source("predicting-cdiff/create_training_data_fullset.r")
+Warning: ‘timedatectl’ indicates the non-existent timezone name ‘n/a’
+unable to deduce timezone name from ‘America/Chicago’
+unable to deduce timezone name from ‘America/Chicago’
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.4.4     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+[1] "start time: 2025-05-17 19:18:29.024561"
+Rows: 47 Columns: 2
+Warning: ‘timedatectl’ indicates the non-existent timezone name ‘n/a’
+unable to deduce timezone name from ‘America/Chicago’
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (2): Antibiotic, drug_class
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Loading antibiotics...
+Rows: 4156450 Columns: 19
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (13): DRUG_TYPE, DRUG, DRUG_NAME_POE, DRUG_NAME_GENERIC, FORMULARY_DRUG...
+dbl   (4): ROW_ID, SUBJECT_ID, HADM_ID, ICUSTAY_ID
+dttm  (2): STARTDATE, ENDDATE
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+COMPLETE.
+Loading C. diff diagnosis codes...
+Rows: 631726 Columns: 16
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (6): SPEC_TYPE_DESC, ORG_NAME, AB_NAME, DILUTION_TEXT, DILUTION_COMPARI...
+dbl  (8): ROW_ID, SUBJECT_ID, HADM_ID, SPEC_ITEMID, ORG_ITEMID, ISOLATE_NUM,...
+dttm (2): CHARTDATE, CHARTTIME
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 651047 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (1): ICD9_CODE
+dbl (4): ROW_ID, SUBJECT_ID, HADM_ID, SEQ_NUM
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 651047 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (1): ICD9_CODE
+dbl (4): ROW_ID, SUBJECT_ID, HADM_ID, SEQ_NUM
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+COMPLETE.
+Loading demographics...
+Rows: 58976 Columns: 19
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (9): ADMISSION_TYPE, ADMISSION_LOCATION, DISCHARGE_LOCATION, INSURANCE,...
+dbl  (5): ROW_ID, SUBJECT_ID, HADM_ID, HOSPITAL_EXPIRE_FLAG, HAS_CHARTEVENTS...
+dttm (5): ADMITTIME, DISCHTIME, DEATHTIME, EDREGTIME, EDOUTTIME
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 46520 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (1): GENDER
+dbl  (3): ROW_ID, SUBJECT_ID, EXPIRE_FLAG
+dttm (4): DOB, DOD, DOD_HOSP, DOD_SSN
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+COMPLETE.
+Processing demographics...
+COMPLETE.
+Loading ICU stays...
+Rows: 61532 Columns: 12
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (3): DBSOURCE, FIRST_CAREUNIT, LAST_CAREUNIT
+dbl  (7): ROW_ID, SUBJECT_ID, HADM_ID, ICUSTAY_ID, FIRST_WARDID, LAST_WARDID...
+dttm (2): INTIME, OUTTIME
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+COMPLETE.
+Loading lab values...
+COMPLETE.
+Processing liver values...COMPLETE.
+Processing renal labs...COMPLETE.
+Processing bloods...COMPLETE.
+Beginning final join...
+COMPLETE.
+Warning: ‘timedatectl’ indicates the non-existent timezone name ‘n/a’
+unable to deduce timezone name from ‘America/Chicago’
+# A tibble: 2 × 2
+  V1          n
+  <chr>   <int>
+1 integer    16
+2 numeric   150
+Writing final compressed CSV...
+COMPLETE.
+[1] "Processing time: 5.939 mins"
+[1] "Write time: 5.549 secs"
+Warning messages:
+1: In left_join(antibiotics, cdiff_tests, by = c("subject_id", "hadm_id")) :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 1405 of `x` matches multiple rows in `y`.
+ℹ Row 1 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship =
+  "many-to-many"` to silence this warning.
+2: In timechange:::C_valid_tz(tzone) :
+  System timezone name is unknown. Please set environment variable TZ. Using UTC.
+3: The `x` argument of `as_tibble.matrix()` must have unique column names if
+`.name_repair` is omitted as of tibble 2.0.0.
+ℹ Using compatibility `.name_repair`.
+This warning is displayed once every 8 hours.
+Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+generated.

@@ -1,5 +1,5 @@
 library(tidyverse)
-execution_start <- now()
+execution_start <- now(tz = "America/Chicago")
 print(paste("start time:", execution_start))
 # Data loading and cleaning
 ## Major settings:
@@ -8,7 +8,7 @@ antibiotics_list <- read_csv("predicting-cdiff/hospital-antibiotics.csv")
 
 
 ## Generate sample of unique antibiotic administrations
-cat("Loading antibiotics...\n\n")
+cat("Loading antibiotics...\n")
 antibiotics <- read_csv("physionet.org/files/mimiciii/1.4/PRESCRIPTIONS.csv.gz") |>
     # for reasons passing understanding, the demo dataset has all-lowercase colnames and the full size has all caps
     rename_all(~str_to_lower(.x)) |>
@@ -36,7 +36,8 @@ antibiotics <- read_csv("physionet.org/files/mimiciii/1.4/PRESCRIPTIONS.csv.gz")
         names_prefix = "ab_class_is_"
     )
 
-
+cat("COMPLETE.\n")
+cat("Loading C. diff diagnosis codes...\n")
 ## Load *C. diff* diagnosis info
 
 cdiff_tests <- read_csv("./physionet.org/files/mimiciii/1.4/MICROBIOLOGYEVENTS.csv.gz") |>
@@ -129,7 +130,18 @@ cat("COMPLETE.\n")
 
 ## Load lab values
 cat("Loading lab values...\n")
-labvalues <- read_csv("./physionet.org/files/mimiciii/1.4/LABEVENTS.csv.gz") |>
+labvalues <- read_csv("./physionet.org/files/mimiciii/1.4/LABEVENTS.csv.gz",
+		      col_types = cols(
+			  ROW_ID = col_double(),
+			  SUBJECT_ID = col_double(),
+			  HADM_ID = col_double(),
+			  ITEMID = col_double(),
+			  VALUENUM = col_double(),
+			  VALUE = col_character(),
+			  VALUEUOM = col_character(),
+			  FLAG = col_character(),
+			  CHARTTIME = col_datetime()
+                )) |>
     rename_all(~str_to_lower(.x))
 cat("COMPLETE.\n")
 ### Liver
@@ -349,7 +361,7 @@ training_data <- antibiotics |>
     ) |>
     mutate(
         # generate age column
-        age_at_admin = as.integer(ab_startdate - dob),
+        age_at_admin = as.numeric(ab_startdate - dob),
         # generate variable for time since admission at Ab admin, mark 0 if same day since datetimes for Abs are not available
         admin_time_since_admission = as.integer(pmax(ab_startdate - admittime, 0)),
         in_icu = ifelse(
