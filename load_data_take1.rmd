@@ -336,15 +336,15 @@ training_data <- antibiotics |>
     ) |>
     mutate(
         # generate age column
-        age_at_admin = as.integer(ab_startdate - dob),
+        age_at_admin = as.numeric(ab_startdate - dob) / 365,
         # generate variable for time since admission at Ab admin, mark 0 if same day since datetimes for Abs are not available
-        admin_time_since_admission = as.integer(pmax(ab_startdate - admittime, 0)),
+        admin_time_since_admission = as.numeric(pmax(ab_startdate - admittime, 0)),
         in_icu = ifelse(
             ab_startdate >= icu_intime & ab_startdate <= icu_outtime,
             TRUE,
             FALSE
         ),
-        admission_time_of_day = as.integer(hour(admittime)),
+        admission_time_of_day = as.numeric(hour(admittime)),
         # GENERATE LABEL:
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
@@ -358,6 +358,10 @@ training_data <- antibiotics |>
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
         cdiff_30d_flag = replace_na(cdiff_30d_flag, 0)
     )  |>
+    # couple of QC things:
+    filter(
+        age_at_admin < 100
+    ) |>
     select(
         # remove ID columns
         -antibiotic_key,
@@ -376,7 +380,8 @@ training_data <- antibiotics |>
         -in_icu,
         -icu_intime,
         -icu_outtime,
-        -dischtime)
+        -dischtime
+    )
 # View(training_data)
 ```
 ```{r}
