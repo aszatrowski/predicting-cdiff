@@ -131,17 +131,17 @@ cat("COMPLETE.\n")
 ## Load lab values
 cat("Loading lab values...\n")
 labvalues <- read_csv("./physionet.org/files/mimiciii/1.4/LABEVENTS.csv.gz",
-		      col_types = cols(
-			  ROW_ID = col_double(),
-			  SUBJECT_ID = col_double(),
-			  HADM_ID = col_double(),
-			  ITEMID = col_double(),
-			  VALUENUM = col_double(),
-			  VALUE = col_character(),
-			  VALUEUOM = col_character(),
-			  FLAG = col_character(),
-			  CHARTTIME = col_datetime()
-                )) |>
+    col_types = cols(
+        ROW_ID = col_double(),
+        SUBJECT_ID = col_double(),
+        HADM_ID = col_double(),
+        ITEMID = col_double(),
+        VALUENUM = col_double(),
+        VALUE = col_character(),
+        VALUEUOM = col_character(),
+        FLAG = col_character(),
+        CHARTTIME = col_datetime()
+    )) |>
     rename_all(~str_to_lower(.x))
 cat("COMPLETE.\n")
 ### Liver
