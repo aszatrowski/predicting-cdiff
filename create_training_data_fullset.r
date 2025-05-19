@@ -359,13 +359,15 @@ training_data <- antibiotics |>
     ) |>
     mutate(
         # generate age column
-        age_at_admin = as.numeric(ab_startdate - dob) / 365,
+        age_at_admin = as.numeric(interval(start = dob, end = date(ab_startdate)))/(365*24*3600), # years
         # generate variable for time since admission at Ab admin, mark 0 if same day since datetimes for Abs are not available
-        admin_time_since_admission = as.numeric(pmax(ab_startdate - admittime, 0)),
+        #admin_time_since_admission = as.numeric(pmax(ab_startdate - admittime, 0)),
+        admin_time_since_admission = pmax(as.numeric(interval(start = date(admittime), end = date(ab_startdate)))/(3600), 0), # hours
         in_icu = ifelse(
-            ab_startdate >= icu_intime & ab_startdate <= icu_outtime,
-            TRUE,
-            FALSE
+            #ab_startdate >= icu_intime & ab_startdate <= icu_outtime,
+		ab_startdate %within% interval(start = icu_intime, end = icu_outtime),
+            yes = 1,
+            no = 0
         ),
         admission_time_of_day = as.numeric(hour(admittime)),
         # GENERATE LABELS:
@@ -412,9 +414,9 @@ training_data <- antibiotics |>
     )  |>
     # couple of QC things:
     filter(
-        age_at_admin < 100,
-        admin_time_since_admission < 36000
-    ) |>
+        age_at_admin < 100, # years
+       admin_time_since_admission <= 60*24 # 30 days*24 hours = 1440 hours
+   ) |>
     select(
         # remove ID columns
         -antibiotic_key,
