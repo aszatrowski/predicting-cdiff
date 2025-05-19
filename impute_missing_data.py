@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.impute import SimpleImputer, KNNImputer
 
 # %%
-training_data = pd.read_csv("training_data.csv")
+training_data = pd.read_csv("training_data_30d.csv")
 training_data  = training_data.fillna(np.nan)
 
 # %%
@@ -24,3 +24,4 @@ training_data_imputed_df = pd.DataFrame(imputed_array, columns=training_data.col
 
 # %%
 training_data_imputed_df.to_csv("training_data_imputed.csv")
+# %%

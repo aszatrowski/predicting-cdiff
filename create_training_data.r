@@ -341,7 +341,7 @@ training_data <- antibiotics |>
         ),
         admission_time_of_day = as.numeric(hour(admittime)),
         # GENERATE LABEL:
-        cdiff_30d_flag = ifelse(
+        cdiff_delta_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
             (cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_startdate + time_delta)
             # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
@@ -351,7 +351,7 @@ training_data <- antibiotics |>
             no = 0
         ),
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
-        cdiff_30d_flag = replace_na(cdiff_30d_flag, 0)
+        cdiff_delta_flag = replace_na(cdiff_delta_flag, 0)
     )  |>
     # couple of QC things:
     filter(
@@ -384,9 +384,11 @@ process_stop <- now()
 training_data_coltypes <- training_data  %>%
     summarise_all(class) %>%
     t() |>
-    as_tibble()
+    as.data.frame()
+print(count(training_data, cdiff_delta_flag))
 print(count(training_data_coltypes, V1))
-write_csv(training_data, "training_data.csv", progress = TRUE)
+filename <- paste0("training_data_", as.numeric(time_delta) / (3600 * 24), "d.csv")
+write_csv(training_data, filename, progress = TRUE)
 write_stop <- now()
 print(paste("Processing time:", format(process_stop - execution_start, digits = 4)))
 print(paste("Write time:", format(write_stop - process_stop, digits = 4)))
