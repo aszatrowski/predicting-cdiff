@@ -62,7 +62,6 @@ This repository contains code for predicting *Clostridioides difficile* infectio
         - [ ] 7 days
         - [ ] 30 days
     - [ ] Label formula
-    - [ ] With/without gamma-glutamyltransferase (only 1 non-missing value)
 - [ ] Secondary endpoint: severe C. diff
     - [ ] Define label for this
     - [ ] Implement 
@@ -121,4 +120,18 @@ Admission is labeled as CDI if:
         * Bilirubin
     * Renal function tests
         * Creatinine
-        * eGFR 
+        * eGFR
+     
+UPDATED TO COMPLETE BEFORE PRESENTATION 
+Emily: 
+- [ ] Attempt different missingness imputation method (binary is_missing, to train on missing data) 
+- [X] Optimize XGBclassifier
+-     [X] Sensitivity analysis for test 
+- [ ] Logistic regression model
+- [ ] Start slides
+- [ ] Research interpretability of features from models
+
+Austin: 
+- [ ] Survival analysis
+- [ ] Work on slides too
+- [ ] maybe: severe c. diff
