@@ -415,7 +415,7 @@ process_stop <- now()
 training_data_coltypes <- training_data  %>%
     summarise_all(class) %>%
     t() |>
-    as_tibble()
+    as.data.frame()
 print(count(training_data_coltypes, V1))
 cat("Writing final compressed CSV...\n")
 write_csv(training_data, "predicting-cdiff/training_data_full.csv.gz", progress = TRUE)
