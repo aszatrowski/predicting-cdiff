@@ -402,20 +402,21 @@ training_data <- antibiotics |>
         cdiff_2d_flag = replace_na(cdiff_2d_flag, 0),
         cdiff_7d_flag = replace_na(cdiff_7d_flag, 0),
         cdiff_30d_flag = replace_na(cdiff_30d_flag, 0),
+        cdiff_survival_flag = ifelse(
+            (cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(30))
+        ),
         survival_time = case_when(
             # LABEL OPTION 1
             cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(30) ~ interval(ab_startdate, cdiff_charttime),
-            # LABEL OPTION 2
-            (cdiff_icd9 == "00845" & dischtime <= ab_startdate + ddays(30) & dischtime > ab_startdate + ddays(1)) ~ interval(ab_startdate, dischtime),
             # ELSE:
-            TRUE ~ interval(ab_startdate, dischtime) 
+            TRUE ~ interval(ab_startdate, dischtime)
         ),
         survival_time = as.numeric(survival_time) / (3600 * 24), # convert to days
     )  |>
     # couple of QC things:
     filter(
         age_at_admin < 100, # years
-       admin_time_since_admission <= 60*24 # 30 days*24 hours = 1440 hours
+       admin_time_since_admission <= 60 * 24 # 30 days*24 hours = 1440 hours
    ) |>
     select(
         # remove ID columns
