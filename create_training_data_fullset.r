@@ -1,9 +1,7 @@
 library(tidyverse)
-execution_start <- now(tz = "America/Chicago")
+execution_start <- now(tzone = "America/Chicago")
 print(paste("start time:", execution_start))
 # Data loading and cleaning
-## Major settings:
-time_delta <- ddays(30) # days
 antibiotics_list <- read_csv("predicting-cdiff/hospital-antibiotics.csv")
 
 
@@ -370,18 +368,47 @@ training_data <- antibiotics |>
             FALSE
         ),
         admission_time_of_day = as.numeric(hour(admittime)),
-        # GENERATE LABEL:
+        # GENERATE LABELS:
+        cdiff_2d_flag = ifelse(
+            # OPTION 1: C. diff positive culture after Ab start and less than 1 days after
+            (cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(2))
+            # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
+            | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + ddays(1) & dischtime > ab_startdate + ddays(1)),
+            # Assign TRUE/FALSE accordingly
+            yes = 1,
+            no = 0
+        ),
+        cdiff_7d_flag = ifelse(
+            # OPTION 1: C. diff positive culture after Ab start and less than 7 days after
+            (cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(7))
+            # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
+            | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + ddays(7) & dischtime > ab_startdate + ddays(1)),
+            # Assign TRUE/FALSE accordingly
+            yes = 1,
+            no = 0
+        ),
         cdiff_30d_flag = ifelse(
             # OPTION 1: C. diff positive culture after Ab start and less than 30 days after
-            (cdiff_charttime >= ab_startdate & cdiff_charttime <= ab_startdate + time_delta)
-            # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <30 days after Ab start
-            | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + time_delta),
+            (cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(30))
+            # OPTION 2: C. diff ICD (00845) assigned at end of stay, as long as discharge was <ddays(30) days after Ab start
+            | (cdiff_icd9 == "00845" & dischtime <= ab_startdate + ddays(30) & dischtime > ab_startdate + ddays(1)),
             # Assign TRUE/FALSE accordingly
             yes = 1,
             no = 0
         ),
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
-        cdiff_30d_flag = replace_na(cdiff_30d_flag, 0)
+        cdiff_2d_flag = replace_na(cdiff_2d_flag, 0),
+        cdiff_7d_flag = replace_na(cdiff_7d_flag, 0),
+        cdiff_30d_flag = replace_na(cdiff_30d_flag, 0),
+        survival_time = case_when(
+            # LABEL OPTION 1
+            cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(30) ~ interval(ab_startdate, cdiff_charttime),
+            # LABEL OPTION 2
+            (cdiff_icd9 == "00845" & dischtime <= ab_startdate + ddays(30) & dischtime > ab_startdate + ddays(1)) ~ interval(ab_startdate, dischtime),
+            # ELSE:
+            TRUE ~ interval(ab_startdate, dischtime) 
+        ),
+        survival_time = as.numeric(survival_time) / (3600 * 24), # convert to days
     )  |>
     # couple of QC things:
     filter(
@@ -412,6 +439,12 @@ training_data <- antibiotics |>
 
 cat("COMPLETE.\n")
 process_stop <- now()
+print("2 day counts:")
+print(count(training_data, cdiff_2d_flag))
+print("7 day counts:")
+print(count(training_data, cdiff_7d_flag))
+print("30 day counts:")
+print(count(training_data, cdiff_30d_flag))
 training_data_coltypes <- training_data  %>%
     summarise_all(class) %>%
     t() |>
