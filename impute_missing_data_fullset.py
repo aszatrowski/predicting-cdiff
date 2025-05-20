@@ -32,15 +32,15 @@ print("Done.")
 
 print("Setting kNN imputer...")
 # n_jobs to maximize parallelism
-knn_imputer = KNNImputer(missing_values=np.nan, n_neighbors=2, weights="uniform", n_jobs=-1)
-knn_imputer.fit(X = training_data)
+#knn_imputer = KNNImputer(missing_values=np.nan, n_neighbors=2, weights="uniform", n_jobs=-1)
+#knn_imputer.fit(X = training_data)
 print("Done.")
 print("Running kNN impute...")
-imputed_array_knn = knn_imputer.transform(training_data)
-training_data_imputed_kNN_df = pd.DataFrame(imputed_array_kNN, columns=training_data.columns, index=training_data.index)
+#imputed_array_knn = knn_imputer.transform(training_data)
+#training_data_imputed_kNN_df = pd.DataFrame(imputed_array_kNN, columns=training_data.columns, index=training_data.index)
 print("Done.")
 
 # %%
-print("Writing kNN CSV...")
-training_data_imputed_kNN_df.to_csv("training_data_imputed_kNN_full.csv.gz", index=False)
-print("Done.")
+#print("Writing kNN CSV...")
+#training_data_imputed_kNN_df.to_csv("training_data_imputed_kNN_full.csv.gz", index=False)
+#print("Done.")
