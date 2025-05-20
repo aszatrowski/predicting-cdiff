@@ -41,35 +41,54 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - If BBJ can get us Midway access, that would also be good, since we can just `wget` the whole dataset there and train using their compute
         - update: Midway access likely. Store the data up there, have all the groups share a copy, and then we can use Midway compute for model training and we won't have to worry about fitting the whole training dataset in RAM 
 - [x] MIMIC-III Clinical on Midway
-- [ ] First XGBoost training run on demo dataset
-    - [ ] Create train/validation/test subsets
+- [x] First XGBoost training run on demo dataset
+    - [x] Create train/validation/test subsets
         - `sklearn.train_test_split()`
         - k-fold cross validation probably a good idea
 - [ ] First logistic regression training run on demo dataset
 - [ ] Simple logistic regression for `cdiff_flag ~ admin_time_since_admit`
     - because Austin is curious
 - [ ] Select final feature set 
-- [ ] `git pull` on Midway
+- [x] `git pull` on Midway
 - [x] Run data pull on Midway
 - [ ] Implement logistic regression on Midway
     - Check OR
-- [ ] Implement XGBoost on Midway
-- [ ] Figure out model evaluation; will be AUPRC given low case prevalence
+- [x] Implement XGBoost on Midway
+- [x] Figure out model evaluation; will be AUPRC given low case prevalence
+    - both AUROC and AUPRCs computed for prediction periods
 - [ ] Sensitivity analyses:
-    - [ ] Timing
-        - [ ] 1 day
-        - [ ] 2 days
-        - [ ] 7 days
-        - [ ] 30 days
+    - [x] Timing
+        - [ ] ~~1 day~~
+        - [x] 2 days
+        - [x] 7 days
+        - [x] 30 days
     - [ ] Label formula
+    - [ ] ~~With/without gamma-glutamyltransferase (only 1 non-missing value)~~
 - [ ] Secondary endpoint: severe C. diff
     - [ ] Define label for this
     - [ ] Implement 
-- [ ] Survival analysis!
-- [ ] Unsupervised clustering of cases for identifying cryptic C-diff?
+- [ ] Survival analysis
+    - `scikit-surv`
+    [ ] fix survival flag 
+    [ ] nice KM plot
+    [ ] classifier
+    [ ] classifier w cross validation and validation/test
+- [ ] ~~Unsupervised clustering of cases for identifying cryptic C-diff?~~
     - Is case similarity sufficiently specific, or would this be dastardly falsely positive?
     - any way to follow up and validate?
-- [ ] Final report in $\LaTeX$ (non-negotiable)
+UPDATED TO COMPLETE BEFORE PRESENTATION 
+Emily: 
+- [ ] Attempt different missingness imputation method (binary is_missing, to train on missing data) 
+- [X] Optimize XGBclassifier
+-     [X] Sensitivity analysis for test 
+- [ ] Logistic regression model
+- [ ] Start slides
+- [ ] Research interpretability of features from models
+
+Austin: 
+- [ ] Survival analysis
+- [ ] Work on slides too
+- [ ] maybe: severe c. diff
 
 ## Labels
 Admission is labeled as CDI if:
@@ -120,18 +139,4 @@ Admission is labeled as CDI if:
         * Bilirubin
     * Renal function tests
         * Creatinine
-        * eGFR
-     
-UPDATED TO COMPLETE BEFORE PRESENTATION 
-Emily: 
-- [ ] Attempt different missingness imputation method (binary is_missing, to train on missing data) 
-- [X] Optimize XGBclassifier
--     [X] Sensitivity analysis for test 
-- [ ] Logistic regression model
-- [ ] Start slides
-- [ ] Research interpretability of features from models
-
-Austin: 
-- [ ] Survival analysis
-- [ ] Work on slides too
-- [ ] maybe: severe c. diff
+        * eGFR 
