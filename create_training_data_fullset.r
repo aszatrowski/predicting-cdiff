@@ -401,8 +401,8 @@ training_data <- antibiotics |>
         # ifelse() returns NA for missing data (non-Cdiff patients will have missing ICDs), so fill missing with FALSE
         cdiff_survival_flag = ifelse(
 				     # CDIFF LABEL 1
-            test = (cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(30))
-	    yes = 1
+            test = (cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(30)),
+	    yes = 1,
 	    no = 0
         ),
         cdiff_2d_flag = replace_na(cdiff_2d_flag, 0),
