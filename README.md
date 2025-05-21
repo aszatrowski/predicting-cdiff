@@ -70,23 +70,23 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - [ ] Implement 
 - [x] Survival analysis
     - `scikit-surv`
-    [x] fix survival flag 
-    [x] nice KM plot
-    [x] Cox PH model
-    [ ] classifier w cross validation and validation/test
+    - [x] fix survival flag 
+    - [x] nice KM plot
+    - [x] Cox PH model
+    - [ ] classifier w cross validation and validation/test
 - [ ] ~~Unsupervised clustering of cases for identifying cryptic C-diff?~~
     - Is case similarity sufficiently specific, or would this be dastardly falsely positive?
     - any way to follow up and validate?
-UPDATED TO COMPLETE BEFORE PRESENTATION 
-Emily: 
+### UPDATED TO COMPLETE BEFORE PRESENTATION 
+#### Emily: 
 - [ ] Attempt different missingness imputation method (binary is_missing, to train on missing data) 
 - [X] Optimize XGBclassifier
--     [X] Sensitivity analysis for test 
+    - [X] Sensitivity analysis for test 
 - [ ] Logistic regression model
 - [x] Start slides
 - [ ] Research interpretability of features from models
 
-Austin: 
+#### Austin: 
 - [x] Survival analysis
 - [x] Work on slides too
 - [ ] maybe: severe c. diff
