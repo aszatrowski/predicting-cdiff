@@ -1,3 +1,10 @@
+# R files
+.RData
+.Rhistory
+.Rprofile
+renv/
+renv.lock
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
