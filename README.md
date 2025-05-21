@@ -79,19 +79,19 @@ This repository contains code for predicting *Clostridioides difficile* infectio
     - any way to follow up and validate?
 ### UPDATED TO COMPLETE BEFORE PRESENTATION 
 #### Emily: 
-- [ ] Attempt different missingness imputation method (binary is_missing, to train on missing data) 
+- [ ] Maybe: Attempt different missingness imputation method (binary is_missing, to train on missing data) 
 - [X] Optimize XGBclassifier
-    - [X] Sensitivity analysis for test 
-- [ ] Logistic regression model
-- [x] Start slides
+    - [X] Sensitivity analysis for test
+    - [ ] Confidence validation for examining how much individual labels matter
+- [ ] Maybe: Logistic regression model
+- [ ] Start slides
 - [ ] Research interpretability of features from models
 
 #### Austin: 
 - [x] Survival analysis
-- [x] Work on slides too
+- [ ] Work on slides too
 - [ ] maybe: severe c. diff
 - [ ] maybe: random survival forests
-
 ## Labels
 Admission is labeled as CDI if:
 * ELISA Positive OR
