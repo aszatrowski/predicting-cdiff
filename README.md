@@ -29,9 +29,10 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [x] Load renal fxn data
     - [x] filter to prior to admin
 - [ ] MISSINGNESS IMPUTATION
-    - [ ] Mean imputation
-    - [ ] Try kNN
-- [ ] Load comorbidities data (ICD codes)
+    - [x] Mean imputation
+    - [x] Median imputation
+    - [x] Try kNN - failed
+- [ ] ~~Load comorbidities data (ICD codes)~~
     - [ ] filter to prior admissions; ICDs don't have attached datetimes anyway
 - [ ] Figure out how to handle dosage
      - [x] For now, just antibiotic class
@@ -67,11 +68,11 @@ This repository contains code for predicting *Clostridioides difficile* infectio
 - [ ] Secondary endpoint: severe C. diff
     - [ ] Define label for this
     - [ ] Implement 
-- [ ] Survival analysis
+- [x] Survival analysis
     - `scikit-surv`
-    [ ] fix survival flag 
-    [ ] nice KM plot
-    [ ] classifier
+    [x] fix survival flag 
+    [x] nice KM plot
+    [x] Cox PH model
     [ ] classifier w cross validation and validation/test
 - [ ] ~~Unsupervised clustering of cases for identifying cryptic C-diff?~~
     - Is case similarity sufficiently specific, or would this be dastardly falsely positive?
@@ -82,13 +83,14 @@ Emily:
 - [X] Optimize XGBclassifier
 -     [X] Sensitivity analysis for test 
 - [ ] Logistic regression model
-- [ ] Start slides
+- [x] Start slides
 - [ ] Research interpretability of features from models
 
 Austin: 
-- [ ] Survival analysis
-- [ ] Work on slides too
+- [x] Survival analysis
+- [x] Work on slides too
 - [ ] maybe: severe c. diff
+- [ ] maybe: random survival forests
 
 ## Labels
 Admission is labeled as CDI if:
