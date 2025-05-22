@@ -422,6 +422,12 @@ training_data <- antibiotics |>
         age_at_admin < 100, # years
        admin_time_since_admission <= 60 * 24 # 30 days*24 hours = 1440 hours
    ) |>
+    mutate(
+      cdiff_label_elisa = ifelse(!is.na(cdiff_charttime), 1, 0),
+      cdiff_label_icd9 = ifelse(!is.na(cdiff_icd9), 1, 0),
+      cdiff_label_diarrhea = ifelse(!is.na(diarrhea_icd9), 1, 0),
+      cdiff_label_icd9_plus_diarrhea = ifelse(!is.na(cdiff_icd9) &!is.na(diarrhea_icd9), 1, 0),
+        cdiff_label_any = ifelse(!is.na(cdiff_charttime) | !is.na(cdiff_icd9) | !is.na(diarrhea_icd9), 1, 0)) |>
     select(
         # remove ID columns
         -antibiotic_key,
