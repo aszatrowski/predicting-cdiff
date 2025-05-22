@@ -423,11 +423,16 @@ training_data <- antibiotics |>
        admin_time_since_admission <= 60 * 24 # 30 days*24 hours = 1440 hours
    ) |>
     mutate(
-      cdiff_label_elisa = ifelse(!is.na(cdiff_charttime), 1, 0),
-      cdiff_label_icd9 = ifelse(!is.na(cdiff_icd9), 1, 0),
-      cdiff_label_diarrhea = ifelse(!is.na(diarrhea_icd9), 1, 0),
-      cdiff_label_icd9_plus_diarrhea = ifelse(!is.na(cdiff_icd9) &!is.na(diarrhea_icd9), 1, 0),
-        cdiff_label_any = ifelse(!is.na(cdiff_charttime) | !is.na(cdiff_icd9) | !is.na(diarrhea_icd9), 1, 0)) |>
+  cdiff_label_elisa = ifelse(!is.na(cdiff_charttime), 1, 0),
+  cdiff_label_icd9 = ifelse(!is.na(cdiff_icd9), 1, 0),
+  cdiff_label_diarrhea = ifelse(!is.na(diarrhea_icd9), 1, 0),
+  cdiff_label_icd9_plus_diarrhea = ifelse(!is.na(cdiff_icd9) & !is.na(diarrhea_icd9), 1, 0),
+  cdiff_label_any = ifelse(!is.na(cdiff_charttime) | !is.na(cdiff_icd9) | !is.na(diarrhea_icd9), 1, 0),
+  cdiff_test_only_flag = ifelse(cdiff_label_elisa == 1 & cdiff_label_icd9 == 0, 1, 0),
+  cdiff_icd_only_flag = ifelse(cdiff_label_elisa == 0 & cdiff_label_icd9 == 1, 1, 0),
+  cdiff_both_flag = ifelse(cdiff_label_elisa == 1 & cdiff_label_icd9 == 1, 1, 0)
+)
+ |>
     select(
         # remove ID columns
         -antibiotic_key,
