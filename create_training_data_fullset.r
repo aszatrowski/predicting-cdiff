@@ -422,17 +422,29 @@ training_data <- antibiotics |>
         age_at_admin < 100, # years
        admin_time_since_admission <= 60 * 24 # 30 days*24 hours = 1440 hours
    ) |>
-    mutate(
-  cdiff_label_elisa = ifelse(!is.na(cdiff_charttime), 1, 0),
-  cdiff_label_icd9 = ifelse(!is.na(cdiff_icd9), 1, 0),
-  cdiff_label_diarrhea = ifelse(!is.na(diarrhea_icd9), 1, 0),
-  cdiff_label_icd9_plus_diarrhea = ifelse(!is.na(cdiff_icd9) & !is.na(diarrhea_icd9), 1, 0),
-  cdiff_label_any = ifelse(!is.na(cdiff_charttime) | !is.na(cdiff_icd9) | !is.na(diarrhea_icd9), 1, 0),
-  cdiff_test_only_flag = ifelse(cdiff_label_elisa == 1 & cdiff_label_icd9 == 0, 1, 0),
-  cdiff_icd_only_flag = ifelse(cdiff_label_elisa == 0 & cdiff_label_icd9 == 1, 1, 0),
-  cdiff_both_flag = ifelse(cdiff_label_elisa == 1 & cdiff_label_icd9 == 1, 1, 0)
-)
- |>
+ mutate(
+	  # Time-limited ELISA flags
+	  cdiff_label_elisa_2d = ifelse(
+	    cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(2),
+	    1, 0),
+	  cdiff_label_elisa_7d = ifelse(
+	    cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(7),
+	    1, 0),
+	  cdiff_label_elisa_30d = ifelse(
+	    cdiff_charttime >= ab_startdate + ddays(1) & cdiff_charttime <= ab_startdate + ddays(30),
+	    1, 0),
+
+	  # Time-limited ICD9 flags
+	  cdiff_label_icd9_2d = ifelse(
+	    cdiff_icd9 == "00845" & dischtime > ab_startdate + ddays(1) & dischtime <= ab_startdate + ddays(2),
+	    1, 0),
+	  cdiff_label_icd9_7d = ifelse(
+	    cdiff_icd9 == "00845" & dischtime > ab_startdate + ddays(1) & dischtime <= ab_startdate + ddays(7),
+	    1, 0),
+	  cdiff_label_icd9_30d = ifelse(
+	    cdiff_icd9 == "00845" & dischtime > ab_startdate + ddays(1) & dischtime <= ab_startdate + ddays(30),
+	    1, 0)
+	) |>
     select(
         # remove ID columns
         -antibiotic_key,
